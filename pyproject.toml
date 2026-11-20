@@ -1,7 +1,7 @@
 [project]
 name = "iskills"
 version = "0.1.0"
-description = "Add your description here"
+description = "Installable agent skill with bundled Python tools"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.10"
 dependencies = []
