@@ -9,56 +9,97 @@ the docs from a folder, a git repo or a website, draw the taxonomy, validate,
 package, install) and hands the judgment calls
 (planning the tree, writing each skill) to a CLI agent (`claude -p` by default).
 
-## Install into a project
+## Requirements
 
-From the project's root:
+- [uv](https://docs.astral.sh/uv/): runs the scripts and fetches their dependencies
+- `git`: fetches docs from repositories
+- a CLI agent for the plan and generate steps (`claude -p` by default)
 
-```bash
+Install uv if you don't have it:
+
+```sh
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+## Installation
+
+### Method 1: installer, into one project (recommended)
+
+Run from the root of your project:
+
+```sh
 curl -fsSL https://raw.githubusercontent.com/anteloc/iskills/master/install.sh | sh
 ```
 
-That's it. It copies the skill into every agent directory the project
-already has (`.claude/`, `.agents/`, `.qwen/`, `.codex/`, `.gemini/`,
-`.opencode/`; `.claude/` if none), and pre-loads the script's dependencies.
-Start a new agent session and ask for an API skill, e.g. *"make a skill for
-the mujoco API and install it in this project"*. The agent also offers to do
-it by itself when the code starts using an API it has no skill for. It
-fetches the docs, builds the skill tree in `~/.cache/iskills/<api>`, and
-installs it next to iskills in the project. Commit both to share them with
-your team.
+It copies the skill into each agent directory the project has (`.claude/`,
+`.agents/`, `.qwen/`, `.codex/`, `.gemini/`, `.opencode/`), or `.claude/` if
+there is none. Run it again to update.
 
-Options go after `sh -s --`:
+To pick the agent directory, e.g. Qwen Code:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/anteloc/iskills/master/install.sh | sh -s -- --agent qwen
+```
+
+### Method 2: installer, for all your projects
+
+Installs into your personal skill directories (`~/.claude/skills/`, ...):
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/anteloc/iskills/master/install.sh | sh -s -- --global
+```
+
+### Method 3: skills CLI
+
+```sh
+npx skills add anteloc/iskills
+```
+
+### Method 4: git clone
+
+Into one project (Claude Code):
+
+```sh
+git clone --depth 1 https://github.com/anteloc/iskills .claude/skills/iskills
+```
+
+Or for all projects:
+
+```sh
+git clone --depth 1 https://github.com/anteloc/iskills ~/.claude/skills/iskills
+```
+
+For other agents, replace `.claude` with `.agents`, `.qwen`, ...
+
+### Installer options
+
+Pass them after `sh -s --`:
 
 | Option | Does |
 | --- | --- |
 | `DIR` | install into that project instead of the current directory |
-| `--global` | install into your personal skill directories (`~/.claude/skills`, ...) for all projects |
-| `--agent NAME` | pick the agent directory (`claude`, `agents`, `qwen`, ...; repeatable) |
+| `--global` | install into your personal skill directories |
+| `--agent NAME` | agent directory: `claude`, `agents`, `qwen`, `codex`, `gemini`, `opencode` (repeatable) |
 | `--ref REF` | install a branch, tag or commit (default: `master`) |
 | `--force` | replace an `iskills/` folder the installer did not create |
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/anteloc/iskills/master/install.sh | sh -s -- --global
-```
+## Usage
 
-Run it again to update. From a clone, `./install.sh <project-dir>`
-installs that clone instead of downloading.
+Start a new agent session in the project and ask, for example:
 
-**Requirements:** [uv](https://docs.astral.sh/uv/) (it runs the scripts and
-fetches their dependencies itself), `git` (to fetch docs from repositories),
-and a CLI agent for the plan and generate steps (`claude -p` by default; the
-skill tells the agent how to pass its own command). Only the runtime files are
-installed (`SKILL.md`, `scripts/`, `references/`, licenses), not the examples.
+> make a skill for the mujoco API and install it in this project
 
-Other ways: `npx skills add anteloc/iskills`, or clone this repo into a skills
-directory (`git clone https://github.com/anteloc/iskills ~/.claude/skills/iskills`).
+The agent fetches the docs, builds the skill tree in `~/.cache/iskills/<api>`
+and installs it in the project. It also offers to do this by itself when your
+code starts using an API it has no skill for. Commit the installed skills to
+share them with your team.
 
 ## Use the script directly
 
 Only [uv](https://docs.astral.sh/uv/) is needed: the script declares its
 dependencies inline (PEP 723), and `uv run` fetches them on first use.
 
-```bash
+```sh
 uv run scripts/skilltree.py build ../moonshine/docs/index.md -o build/moonshine
 # or from a repo or a docs site (markdown, Sphinx .rst or HTML):
 #   build https://github.com/org/lib/tree/main/docs -o build/lib
