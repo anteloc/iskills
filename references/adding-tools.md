@@ -1,67 +1,57 @@
 # Adding a tool to this skill
 
+Tools are subcommands of [scripts/skilltree.py](../scripts/skilltree.py), a
+self-contained script: it declares its dependencies inline (PEP 723), so
+`uv run <skill-dir>/scripts/skilltree.py <command>` works with no install or
+sync step. Keep it that way: no packaging, no entry points.
+
 ## Checklist
 
-1. Create `scripts/<tool_name>.py` (snake_case, executable via
-   `python3 scripts/<tool_name>.py`).
-2. Follow the tool contract below.
-3. Document the tool in `SKILL.md` with a short description and at least
-   one usage example — the agent only discovers tools that are documented
-   there.
-4. If the tool needs third-party packages: `uv add <pkg>` from the repo root,
-   then document running it with
-   `uv run --directory <skill-dir> scripts/<tool_name>.py`.
-5. Test the tool (see below) before committing.
+1. Write a `cmd_<name>(args) -> dict` function in `scripts/skilltree.py`.
+2. Register it in `main()` with `sub.add_parser(...)` and
+   `set_defaults(func=cmd_<name>)`; reuse the `common` / `workspace` /
+   `agent` parent parsers for the shared options.
+3. Document it in `SKILL.md` (pipeline table plus a short section): the
+   agent only discovers tools that are documented there.
+4. Third-party packages: add them to the script's inline `# /// script`
+   `dependencies` block (that is what `uv run` installs), and `uv add <pkg>`
+   from the repo root so the dev environment matches. Prefer a ready-made
+   package over ad-hoc code.
+5. Test it (see below) before committing.
 
 ## Tool contract
 
-- Standard library only when possible; the skill must work without setup.
-- `argparse` CLI with a useful `--help`.
-- `--json` flag emitting machine-readable output (stable shape: always an
-  array or always an object, not both).
-- Exit 0 on success, non-zero on failure; error messages go to stderr.
-- Accept files as arguments and stdin where it makes sense (`-` convention).
+- Return a dict: `main()` prints it as `key: value` lines, or as JSON with
+  `--json`. Put a `problems` list in it to report failures (exit 1).
+- Raise `Error("...")` for a user-facing failure: printed without a
+  traceback, exit 1.
 - No network calls or writes outside the paths the user asked about, unless
   the tool's documented purpose requires it.
+- Files the tool needs at runtime go in `references/` and are read through
+  `REFS`.
 
 ## Template
 
 ```python
-#!/usr/bin/env python3
-"""One-line purpose."""
+def cmd_hello(args) -> dict:
+    """One-line purpose."""
+    path = Path(args.path)
+    if not path.exists():
+        raise Error(f"{path} not found")
+    return {"path": str(path), "problems": []}
 
-import argparse
-import json
-import sys
-
-
-def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("input", help="what this tool consumes")
-    parser.add_argument("--json", action="store_true", help="emit JSON")
-    args = parser.parse_args()
-
-    result = {"input": args.input}  # replace with real work
-
-    if args.json:
-        json.dump(result, sys.stdout, indent=2)
-        print()
-    else:
-        print(result)
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())
+# in main():
+p = sub.add_parser("hello", parents=[common], help="one-line purpose")
+p.add_argument("path", help="what this tool consumes")
+p.set_defaults(func=cmd_hello)
 ```
 
 ## Testing
 
 ```bash
-python3 scripts/<tool_name>.py --help
-python3 scripts/<tool_name>.py <example-input>
-python3 scripts/<tool_name>.py --json <example-input>
-echo "piped input" | python3 scripts/<tool_name>.py   # if stdin is supported
+uv run scripts/skilltree.py <name> --help
+uv run scripts/skilltree.py <name> <example-input>
+uv run scripts/skilltree.py <name> --json <example-input>
 ```
 
 Verify the exit code (`echo $?`) for both a successful and a failing run.

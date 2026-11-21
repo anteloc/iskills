@@ -16,14 +16,15 @@ Large API docsets bloat an agent's context and mix concerns. This skill
 turns a docs tree into a **skill tree** that agents navigate like a person
 navigates the docs: start at the root, open only the subskill for the task.
 
-All paths below are relative to this skill's directory. Run the CLI with:
+Run the script with [uv](https://docs.astral.sh/uv/); it declares its own
+dependencies inline, so there is nothing to install first:
 
 ```bash
-uv run --directory <skill-dir> scripts/skilltree.py <command> ...
+uv run <skill-dir>/scripts/skilltree.py <command> ...
 ```
 
-Use absolute paths for the docs and `--out` (or paths relative to the skill
-directory, since `--directory` changes into it).
+It runs from any directory, so relative paths for the docs and `--out` are
+relative to where you run it.
 
 ## Pipeline
 
@@ -36,17 +37,18 @@ Every step reads and writes files in a workspace (`-o/--out`, default
 | 2. Plan | `plan` | `plan.json`, `plan.md` | agent |
 | 3. Generate | `generate` | `<skill-name>/**/SKILL.md` | agent |
 | 4. Check | `check <out>/<skill-name>` | report | script |
-| 5. Install | `install <out>/<skill-name> --to <skills-dir>` | copy | script |
+| 5. Package | `package <out>/<skill-name>` | `<skill-name>.zip` | script |
+| 6. Install | `install <dir-or-zip> --to <skills-dir>` | skill copy | script |
 
-`build <root.md> [--install <skills-dir>]` runs 1-4 (and 5) in one go.
+`build <root.md> [--install <skills-dir>]` runs 1-4 (and 6) in one go.
 
 ```bash
-cd <skill-dir>
-uv run scripts/skilltree.py map /abs/docs/index.md -o /abs/work
-uv run scripts/skilltree.py plan -o /abs/work
-uv run scripts/skilltree.py generate -o /abs/work
-uv run scripts/skilltree.py check /abs/work/<skill-name>
-uv run scripts/skilltree.py install /abs/work/<skill-name> --to ~/.claude/skills
+uv run <skill-dir>/scripts/skilltree.py map docs/index.md -o work
+uv run <skill-dir>/scripts/skilltree.py plan -o work
+uv run <skill-dir>/scripts/skilltree.py generate -o work
+uv run <skill-dir>/scripts/skilltree.py check work/<skill-name>
+uv run <skill-dir>/scripts/skilltree.py package work/<skill-name>  # -> work/<skill-name>.zip
+uv run <skill-dir>/scripts/skilltree.py install work/<skill-name>.zip --to ~/.claude/skills
 ```
 
 All commands accept `--json`, and exit non-zero on failure.
@@ -82,10 +84,17 @@ SKILL.md, then checks local links, the 500-line limit, and that every
 subskill is linked from its parent. Fix problems with `generate --only` or by
 editing the file.
 
-### 5. Install
+### 5. Package
 
-Only when the user asks. Copies the root skill directory into a skills
-directory (`--to`, default `~/.agents/skills`; Claude Code uses
+Checks the tree (as in step 4), then zips it into a single installer with
+one top-level `<skill-name>/` folder (`-o` sets the zip path). That is the
+layout skill upload forms expect, and what `install` accepts, so share the
+zip instead of a folder.
+
+### 6. Install
+
+Only when the user asks. Installs a skill directory or a `package` zip into a
+skills directory (`--to`, default `~/.agents/skills`; Claude Code uses
 `~/.claude/skills`). Refuses to overwrite unless `--force`.
 
 ## Choosing the agent

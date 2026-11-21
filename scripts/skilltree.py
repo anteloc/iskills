@@ -1,4 +1,12 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#     "markdown-it-py>=4.3.0",
+#     "pyyaml>=6.0.4",
+#     "skills-ref>=0.1.1",
+# ]
+# ///
 """Turn a tree of API docs into a tree of agent skills.
 
 Pipeline. Every step reads and writes files in the --out workspace, so you can
@@ -8,7 +16,8 @@ stop, inspect or hand-edit between steps:
   plan          agent groups docs     -> plan.json, plan.md (mermaid)
   generate      agent writes nodes    -> <skill-name>/**/SKILL.md
   check DIR     validate a skill tree (skills-ref + links)
-  install DIR   copy a skill into a skills directory
+  package DIR   zip a skill into an installer (DIR.zip)
+  install SRC   install a skill (directory or .zip) into a skills directory
   build ROOT.md map + plan + generate + check (+ install with --install)
 
 Agent steps shell out to any CLI agent that reads a prompt on stdin and prints
@@ -26,6 +35,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import zipfile
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -351,7 +361,7 @@ def check_tree(root: Path) -> list[str]:
     problems = []
     for skill_md in sorted(root.rglob("SKILL.md")):
         d = skill_md.parent
-        problems += [f"{d}: {e}" for e in validate(d)]
+        problems += [f"{d}: {e}" for e in validate(d.resolve())]
         text = skill_md.read_text(encoding="utf-8")
         if (n := len(text.splitlines())) > MAX_LINES:
             problems.append(f"{skill_md}: {n} lines (keep under {MAX_LINES})")
@@ -359,8 +369,10 @@ def check_tree(root: Path) -> list[str]:
             target = href.split("#")[0]
             if is_local(href) and target and not (d / target).exists():
                 problems.append(f"{skill_md}: broken link {href}")
-        if d != root and f"{d.name}/SKILL.md" not in (d.parent / "SKILL.md").read_text():
-            problems.append(f"{skill_md}: not linked from {d.parent / 'SKILL.md'}")
+        parent_md = d.parent / "SKILL.md"
+        if d != root and (not parent_md.is_file()
+                          or f"{d.name}/SKILL.md" not in parent_md.read_text(encoding="utf-8")):
+            problems.append(f"{skill_md}: not linked from {parent_md}")
     return problems
 
 
@@ -370,16 +382,41 @@ def cmd_check(args) -> dict:
             "problems": check_tree(root)}
 
 
+def cmd_package(args) -> dict:
+    """Zip a skill as <name>/... (the layout skill uploaders and `install` expect)."""
+    src = Path(args.dir).resolve()
+    if problems := check_tree(src):
+        return {"problems": problems}
+    base = Path(args.output).with_suffix("") if args.output else src.parent / src.name
+    archive = shutil.make_archive(str(base), "zip", root_dir=src.parent, base_dir=src.name)
+    return {"package": archive}
+
+
+def zip_skill_name(path: Path) -> str:
+    """Name of the single top-level skill directory in a skill zip."""
+    with zipfile.ZipFile(path) as zf:
+        names = zf.namelist()
+    tops = {n.split("/")[0] for n in names}
+    if len(tops) != 1 or f"{next(iter(tops))}/SKILL.md" not in names:
+        raise Error(f"{path} is not a skill package (expected one <name>/SKILL.md)")
+    return tops.pop()
+
+
 def cmd_install(args) -> dict:
     src = Path(args.dir).resolve()
-    dest = Path(args.to).expanduser() / src.name
-    if not (src / "SKILL.md").is_file():
-        raise Error(f"{src} is not a skill (no SKILL.md)")
+    is_zip = src.suffix == ".zip"
+    if not is_zip and not (src / "SKILL.md").is_file():
+        raise Error(f"{src} is not a skill (no SKILL.md) nor a .zip package")
+    to = Path(args.to).expanduser()
+    dest = to / (zip_skill_name(src) if is_zip else src.name)
     if dest.exists():
         if not args.force:
             raise Error(f"{dest} exists (use --force to replace it)")
         shutil.rmtree(dest)
-    shutil.copytree(src, dest)
+    if is_zip:
+        shutil.unpack_archive(src, to)  # zipfile drops absolute and ".." paths
+    else:
+        shutil.copytree(src, dest)
     return {"installed": str(dest)}
 
 
@@ -431,8 +468,13 @@ def main() -> int:
     p.add_argument("dir", help="skill directory (the one holding the root SKILL.md)")
     p.set_defaults(func=cmd_check)
 
-    p = sub.add_parser("install", parents=[common], help="copy a skill into a skills directory")
+    p = sub.add_parser("package", parents=[common], help="zip a skill into an installer")
     p.add_argument("dir", help="skill directory")
+    p.add_argument("-o", "--output", help="zip path (default: <dir>.zip)")
+    p.set_defaults(func=cmd_package)
+
+    p = sub.add_parser("install", parents=[common], help="install a skill (directory or .zip)")
+    p.add_argument("dir", metavar="src", help="skill directory or .zip from `package`")
     p.add_argument("--to", default="~/.agents/skills", help="skills directory (default: ~/.agents/skills)")
     p.add_argument("--force", action="store_true", help="replace an existing install")
     p.set_defaults(func=cmd_install)
