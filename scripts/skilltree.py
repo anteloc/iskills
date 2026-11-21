@@ -2,7 +2,9 @@
 # /// script
 # requires-python = ">=3.11"
 # dependencies = [
+#     "beautifulsoup4>=4.12",
 #     "markdown-it-py>=4.3.0",
+#     "pypandoc-binary>=1.15",
 #     "pyyaml>=6.0.4",
 #     "skills-ref>=0.1.1",
 # ]
@@ -12,13 +14,16 @@
 Pipeline. Every step reads and writes files in the --out workspace, so you can
 stop, inspect or hand-edit between steps:
 
+  fetch SOURCE  get the docs as markdown (local, git, Read the Docs, website)
+                -> fetch/ with the root doc (see docsource.py)
   map ROOT.md   crawl the docs        -> taxonomy.json, taxonomy.md (mermaid)
   plan          agent groups docs     -> plan.json, plan.md (mermaid)
   generate      agent writes nodes    -> <skill-name>/**/SKILL.md
   check DIR     validate a skill tree (skills-ref + links)
   package DIR   zip a skill into an installer (DIR.zip)
   install SRC   install a skill (directory or .zip) into a skills directory
-  build ROOT.md map + plan + generate + check (+ install with --install)
+                or into a project's agent skill directories (--project)
+  build SOURCE  fetch + map + plan + generate + check (+ install)
 
 Agent steps shell out to any CLI agent that reads a prompt on stdin and prints
 its answer on stdout: `claude -p` by default, or --agent / $SKILLTREE_AGENT.
@@ -43,6 +48,8 @@ import yaml
 from markdown_it import MarkdownIt
 from skills_ref import validate
 
+from docsource import Error, MkdocsLoader, fetch as fetch_docs
+
 REFS = Path(__file__).resolve().parent.parent / "references"
 DEFAULT_AGENT = os.environ.get("SKILLTREE_AGENT", "claude -p")
 NAME_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
@@ -51,10 +58,6 @@ MAX_LINES = 500  # Agent Skills guidance for a SKILL.md body
 # Indented code blocks are off so content nested in mkdocs tabs
 # (`=== "Python"` + 4-space indent) is still parsed as markdown.
 MD = MarkdownIt("commonmark").disable("code")
-
-
-class Error(Exception):
-    """A user-facing failure: printed without a traceback."""
 
 
 # --------------------------------------------------------------------------
@@ -95,15 +98,17 @@ def mermaid(tree: dict, label) -> str:
 
 
 # --------------------------------------------------------------------------
-# map: crawl docs into a taxonomy tree
+# fetch: get the docs as markdown (see docsource.py)
 # --------------------------------------------------------------------------
 
-class _MkdocsLoader(yaml.SafeLoader):
-    """SafeLoader that tolerates mkdocs tags such as !ENV."""
+def cmd_fetch(args) -> dict:
+    return fetch_docs(args.source, Path(args.out), ref=args.ref, path=args.path,
+                      refresh=args.refresh, max_pages=args.max_pages)
 
 
-_MkdocsLoader.add_multi_constructor("!", lambda loader, suffix, node: None)
-
+# --------------------------------------------------------------------------
+# map: crawl docs into a taxonomy tree
+# --------------------------------------------------------------------------
 
 def doc_node(docs_dir: Path, rel: str, title: str | None = None) -> dict:
     text = (docs_dir / rel).read_text(encoding="utf-8")
@@ -162,7 +167,7 @@ def build_taxonomy(root: Path) -> dict:
         raise Error(f"root doc not found: {root}")
     cfg = find_mkdocs(root)
     if cfg:
-        conf = yaml.load(cfg.read_text(encoding="utf-8"), Loader=_MkdocsLoader) or {}
+        conf = yaml.load(cfg.read_text(encoding="utf-8"), Loader=MkdocsLoader) or {}
         docs_dir = (cfg.parent / conf.get("docs_dir", "docs")).resolve()
         if conf.get("nav") and docs_dir in root.parents:
             rel = root.relative_to(docs_dir).as_posix()
@@ -402,34 +407,60 @@ def zip_skill_name(path: Path) -> str:
     return tops.pop()
 
 
-def cmd_install(args) -> dict:
-    src = Path(args.dir).resolve()
+# Project-local skill directories, by the agent config directory that holds them.
+AGENT_DIRS = (".claude", ".agents", ".qwen", ".codex", ".gemini", ".opencode")
+
+
+def project_skill_dirs(project: Path) -> list[Path]:
+    """<project>/<agent-dir>/skills for every agent config directory in the project."""
+    if not project.is_dir():
+        raise Error(f"project not found: {project}")
+    dirs = [project / d / "skills" for d in AGENT_DIRS if (project / d).is_dir()]
+    if not dirs:
+        raise Error(f"no agent directory ({', '.join(AGENT_DIRS)}) in {project}; "
+                    "pass --to <project>/<agent-dir>/skills instead")
+    return dirs
+
+
+def install_one(src: Path, to: Path, force: bool) -> str:
     is_zip = src.suffix == ".zip"
-    if not is_zip and not (src / "SKILL.md").is_file():
-        raise Error(f"{src} is not a skill (no SKILL.md) nor a .zip package")
-    to = Path(args.to).expanduser()
     dest = to / (zip_skill_name(src) if is_zip else src.name)
     if dest.exists():
-        if not args.force:
+        if not force:
             raise Error(f"{dest} exists (use --force to replace it)")
         shutil.rmtree(dest)
+    to.mkdir(parents=True, exist_ok=True)
     if is_zip:
         shutil.unpack_archive(src, to)  # zipfile drops absolute and ".." paths
     else:
         shutil.copytree(src, dest)
-    return {"installed": str(dest)}
+    return str(dest)
+
+
+def cmd_install(args) -> dict:
+    src = Path(args.dir).resolve()
+    if src.suffix != ".zip" and not (src / "SKILL.md").is_file():
+        raise Error(f"{src} is not a skill (no SKILL.md) nor a .zip package")
+    if args.project and args.to:
+        raise Error("pass --to or --project, not both")
+    if args.project:
+        targets = project_skill_dirs(Path(args.project).expanduser().resolve())
+    else:
+        targets = [Path(args.to or "~/.agents/skills").expanduser()]
+    return {"installed": [install_one(src, to, args.force) for to in targets]}
 
 
 def cmd_build(args) -> dict:
-    result = cmd_map(args)
+    result = cmd_fetch(args)
+    args.root = result["root"]
+    result |= cmd_map(args)
     for step in (cmd_plan, cmd_generate):
         result |= step(args)
         if result.get("problems"):
             return result
     args.dir = result["skill"]
     result |= cmd_check(args)
-    if args.install and not result["problems"]:
-        args.to = args.install
+    if (args.to or args.project) and not result["problems"]:
         result |= cmd_install(args)
     return result
 
@@ -453,6 +484,25 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = parser.add_subparsers(required=True, metavar="command")
 
+    source = argparse.ArgumentParser(add_help=False)
+    source.add_argument("source", help="docs: a root .md/.rst/.html file or docs folder, a git "
+                        "URL (GitHub/GitLab .../tree|blob/<ref>/<path> too), or a docs web page "
+                        "(Read the Docs or any site)")
+    source.add_argument("--ref", help="git branch or tag (default: the repo's default branch)")
+    source.add_argument("--path", help="docs directory or root .md inside the source")
+    source.add_argument("--refresh", action="store_true", help="fetch again instead of reusing <out>/fetch")
+    source.add_argument("--max-pages", type=int, default=500,
+                        help="most pages to download from a website (default: 500)")
+    target = argparse.ArgumentParser(add_help=False)
+    target.add_argument("--to", help="skills directory (default: ~/.agents/skills)")
+    target.add_argument("--project", metavar="DIR", help="install into DIR/<agent-dir>/skills "
+                        f"for each agent directory found ({', '.join(AGENT_DIRS)})")
+    target.add_argument("--force", action="store_true", help="replace an existing install")
+
+    p = sub.add_parser("fetch", parents=[common, workspace, source],
+                       help="get the docs and find the root doc")
+    p.set_defaults(func=cmd_fetch)
+
     p = sub.add_parser("map", parents=[common, workspace], help="crawl docs into a taxonomy")
     p.add_argument("root", help="root markdown doc, e.g. docs/index.md")
     p.set_defaults(func=cmd_map)
@@ -473,16 +523,12 @@ def main() -> int:
     p.add_argument("-o", "--output", help="zip path (default: <dir>.zip)")
     p.set_defaults(func=cmd_package)
 
-    p = sub.add_parser("install", parents=[common], help="install a skill (directory or .zip)")
+    p = sub.add_parser("install", parents=[common, target], help="install a skill (directory or .zip)")
     p.add_argument("dir", metavar="src", help="skill directory or .zip from `package`")
-    p.add_argument("--to", default="~/.agents/skills", help="skills directory (default: ~/.agents/skills)")
-    p.add_argument("--force", action="store_true", help="replace an existing install")
     p.set_defaults(func=cmd_install)
 
-    p = sub.add_parser("build", parents=[common, workspace, agent], help="map + plan + generate + check")
-    p.add_argument("root", help="root markdown doc")
-    p.add_argument("--install", metavar="DIR", help="also install into this skills directory")
-    p.add_argument("--force", action="store_true", help="replace an existing install")
+    p = sub.add_parser("build", parents=[common, workspace, agent, source, target],
+                       help="fetch + map + plan + generate + check (+ install with --to/--project)")
     p.set_defaults(func=cmd_build, only=None)
 
     args = parser.parse_args()
