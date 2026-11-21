@@ -2,8 +2,8 @@
 
 **Turn API docs into API skills.**
 
-iskillz is an [Agent Skill](https://agentskills.io) that makes new skills.
-Point your agent at an API's docs index, and iskillz turns them into an
+**iskillz** is an [Agent Skill](https://agentskills.io) that makes new skills.
+Point your agent at an API's docs index, and **iskillz** turns them into an
 **API skill**: a new skill your agent loads whenever it works with that API,
 e.g. to:
 
@@ -39,7 +39,7 @@ graph TD
 
 **Prompt** (to your agent)
 
-> Use iskillz to make an API skill for the Acme Weather API from
+> Use **iskillz** to make an API skill for the Acme Weather API from
 > https://docs.example.com/acme-weather/index.md and install it in this project.
 
 **Output: API skill**
@@ -54,10 +54,10 @@ graph TD
 
 ## How it works
 
-1. Install iskillz in your project, or globally.
+1. Install **iskillz** in your project, or globally.
 2. Ask your agent to create a new API skill for an API, and give it the API
    docs' entry point, e.g. a GitHub URL.
-3. Your agent uses iskillz to fetch the docs and turn them into a new API
+3. Your agent uses **iskillz** to fetch the docs and turn them into a new API
    skill, tailored to that API, then installs it in your project (e.g.
    `.claude/skills/acme-weather/`). It takes a few minutes.
 
@@ -65,11 +65,10 @@ graph TD
 
 | Where | How |
 | --- | --- |
-| Agent session in a terminal (Claude Code, Qwen Code, Codex, ...) | Ask in plain words (Methods 1–4) |
-| Agent in your editor (e.g. Claude Code in VS Code or JetBrains) | Same: ask in the chat panel (Methods 1–4) |
-| Plain terminal, no agent session | Run the script yourself (Method 5) |
+| Agent session in a terminal (Claude Code, Qwen Code, Codex, ...) | Ask in plain words (see [Usage Examples](#usage-examples)) |
+| Agent in your editor (e.g. Claude Code in VS Code or JetBrains) | Same: ask in the chat panel |
 
-## Installation & Usage
+## Installation
 
 Every method needs these on your machine (check with `python3 --version` and
 `git --version`):
@@ -81,12 +80,11 @@ Every method needs these on your machine (check with `python3 --version` and
 - An agent that uses skills (Claude Code, Qwen Code, Codex, ...). It is
   the one that writes the API skills.
 
-### Method 1: installer, into one project (recommended)
+### Method 1: installer (recommended)
 
-#### Install
+Needs `curl` (preinstalled on macOS and most Linux).
 
-Needs `curl` (preinstalled on macOS and most Linux). From the root of your
-project:
+**Into one project.** From the root of your project:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/anteloc/iskillz/master/install.sh | sh
@@ -96,38 +94,7 @@ It copies the skill into each agent directory the project has (`.agents/`,
 `.claude/`, `.codex/`, ...), or `.claude/` if there is none. It also sets up
 its Python packages. Run it again to update.
 
-To pick the agent directory, e.g. Qwen Code:
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/anteloc/iskillz/master/install.sh | sh -s -- --agent qwen
-```
-
-#### Usage
-
-Start Claude Code in your project (a new session, so it loads the skill)
-and give it a prompt that names the API and, if you know it, where its docs
-are. For example, in a robotics project:
-
-> We're going to simulate our robot arm with MuJoCo. Use iskillz to make a
-> skill for the MuJoCo API from https://mujoco.readthedocs.io/en/stable/overview.html
-> and install it in this project.
-
-The agent fetches the docs, builds the API skill in `~/.cache/iskillz/mujoco`,
-installs it next to iskillz (e.g. `.claude/skills/mujoco/`) and reads it before
-carrying on. It takes a few minutes. Commit the API skill folder to share it
-with your team.
-
-It also works without asking for it by name. Give it a task that needs an API
-it has no skill for, and it offers to build one first:
-
-> Add a script that loads models/arm.xml with mujoco and steps the simulation
-> for 5 seconds.
-
-### Method 2: installer, for all your projects
-
-#### Install
-
-Needs `curl`. From any directory:
+**For all your projects.** Same command, plus `--global`, from any directory:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/anteloc/iskillz/master/install.sh | sh -s -- --global
@@ -136,18 +103,23 @@ curl -fsSL https://raw.githubusercontent.com/anteloc/iskillz/master/install.sh |
 It installs into your personal skill directories (`~/.claude/skills/`, ...),
 so every project sees the skill.
 
-#### Usage
+**To pick the agent directory**, e.g. Qwen Code:
 
-Same as Method 1, in any project. The generated API skills are still
-installed into the project you are working in, not globally:
+```sh
+curl -fsSL https://raw.githubusercontent.com/anteloc/iskillz/master/install.sh | sh -s -- --agent qwen
+```
 
-> We're going to simulate our robot arm with MuJoCo. Use iskillz to make a
-> skill for the MuJoCo API from https://mujoco.readthedocs.io/en/stable/overview.html
-> and install it in this project.
+All installer options, passed after `sh -s --`:
 
-### Method 3: skills CLI
+| Option | Does |
+| --- | --- |
+| `DIR` | install into that project instead of the current directory |
+| `--global` | install into your personal skill directories |
+| `--agent NAME` | agent directory: `claude`, `agents`, `qwen`, `codex`, `gemini`, `opencode` (repeatable) |
+| `--ref REF` | install a branch, tag or commit (default: `master`) |
+| `--force` | replace an `iskillz/` folder the installer did not create |
 
-#### Install
+### Method 2: skills CLI
 
 Needs [Node.js](https://nodejs.org/) (for `npx`). From the root of your
 project:
@@ -158,103 +130,51 @@ npx skills add anteloc/iskillz
 
 Follow its prompts to choose the agents to install for.
 
-#### Usage
+## Usage Examples
 
-Same as Method 1: start a new agent session and give it a prompt, e.g.:
+One use case: you need an API skill for an API. Start a new agent session in
+your project (so it loads **iskillz**) and ask for it, in any of these ways.
 
-> Use iskillz to make a skill for the Click API from
-> https://github.com/pallets/click/tree/main/docs and install it in this project.
+### Name the API and where its docs are
 
-### Method 4: git clone
+For example, in a robotics project:
 
-#### Install
-
-From the root of your project (Claude Code):
-
-```sh
-git clone --depth 1 https://github.com/anteloc/iskillz .claude/skills/iskillz
-```
-
-Or for all your projects:
-
-```sh
-git clone --depth 1 https://github.com/anteloc/iskillz ~/.claude/skills/iskillz
-```
-
-For other agents, replace `.claude` with `.agents`, `.qwen`, ... Update with
-`git -C .claude/skills/iskillz pull`.
-
-#### Usage
-
-Same as Method 1: start a new agent session and give it a prompt, e.g.:
-
-> Use iskillz to make a skill for the MuJoCo API from
-> https://github.com/google-deepmind/mujoco/blob/main/doc/index.rst
+> We're going to simulate our robot arm with MuJoCo. Use **iskillz** to make a
+> skill for the MuJoCo API from https://mujoco.readthedocs.io/en/stable/overview.html
 > and install it in this project.
 
-The first run takes about a minute longer while the skill sets up its Python
-packages.
+### Point to docs in a GitHub repo
 
-### Method 5: command line, without an agent session
+> Use **iskillz** to make a skill for the Click API from
+> https://github.com/pallets/click/tree/main/docs and install it in this project.
 
-Run the pipeline yourself, e.g. to build an API skill once and share it. You pick
-the agent that writes the API skill with `--agent`: any command that
-reads a prompt on stdin and prints the answer. The examples use Claude Code
-(`claude -p`).
+### Let the agent find the docs
 
-#### Install
+Only know the SDK's repo? Ask the agent to find its API docs and their entry
+point (the root doc) first:
 
-The agent CLI you pass to `--agent` must be installed and signed in. For
-Claude Code, install it, then run `claude` once to sign in:
+> Find the API docs for the Moonshine Voice SDK in
+> https://github.com/moonshine-ai/moonshine and their entry point. Then use
+> **iskillz** to make an API skill from them and install it in this project.
 
-```sh
-npm install -g @anthropic-ai/claude-code
-```
+### Just give it a task
 
-Then get the scripts anywhere on your machine:
+It also works without asking for it by name. Give it a task that needs an API
+it has no skill for, and it offers to build one first:
 
-```sh
-git clone --depth 1 https://github.com/anteloc/iskillz ~/iskillz
-```
+> Add a script that loads models/arm.xml with mujoco and steps the simulation
+> for 5 seconds.
 
-#### Usage
+### What happens next
 
-Build an API skill from any docs source (a website, a GitHub folder or
-file, or a local folder) and install it into a project:
+The agent fetches the docs, builds the API skill in `~/.cache/iskillz/mujoco`,
+installs it next to **iskillz** (e.g. `.claude/skills/mujoco/`) and reads it before
+carrying on. It takes a few minutes. Commit the API skill folder to share it
+with your team.
 
-```sh
-python3 ~/iskillz/scripts/skilltree.py build https://mujoco.readthedocs.io/en/stable/overview.html -o ~/.cache/iskillz/mujoco --agent "claude -p" --project /path/to/your/project
-```
-
-Or install it for all your projects with `--to ~/.claude/skills` instead of
-`--project`. The first run sets up the Python packages (about a minute), and
-the agent steps take a few minutes more. Without `--agent`, `build` stops and
-lists prompt files under `~/.cache/iskillz/mujoco/prompts/` for you (or any
-agent) to answer in `~/.cache/iskillz/mujoco/answers/`; running `build` again
-picks the answers up. To review each step (the mermaid diagrams `taxonomy.md`
-and `plan.md` in the workspace), run `fetch`, `map`, `plan`, `generate`,
-`check` and `install` one by one. See [SKILL.md](SKILL.md).
-
-Package an API skill as a zip, to share or upload where skills are accepted.
-Pass the `skill:` path that `build` printed (its name comes from the plan):
-
-```sh
-python3 ~/iskillz/scripts/skilltree.py package ~/.cache/iskillz/mujoco/<skill-name>
-```
-
-Run `python3 ~/iskillz/scripts/skilltree.py <command> --help` for every option.
-
-### Installer options
-
-For Methods 1 and 2, pass them after `sh -s --`:
-
-| Option | Does |
-| --- | --- |
-| `DIR` | install into that project instead of the current directory |
-| `--global` | install into your personal skill directories |
-| `--agent NAME` | agent directory: `claude`, `agents`, `qwen`, `codex`, `gemini`, `opencode` (repeatable) |
-| `--ref REF` | install a branch, tag or commit (default: `master`) |
-| `--force` | replace an `iskillz/` folder the installer did not create |
+This is the same whichever way you installed **iskillz**: even when it is
+installed for all your projects, the API skill is installed into the project
+you are working in.
 
 ## Structure
 
