@@ -88,13 +88,20 @@ for d in $agents; do
   last=$dest
 done
 
-# Requirements of the skill itself: uv runs the script, git fetches repos.
-if command -v uv >/dev/null; then
-  # Download the script's dependencies now, so the first real use is quick.
-  uv run --quiet "$last/scripts/skilltree.py" --help >/dev/null 2>&1 \
-    || say "note: could not pre-load the script's dependencies (they load on first use)"
+# Requirements of the skill itself: Python 3.11+ runs the script, git fetches repos.
+python=""
+for p in python3 python; do
+  if command -v "$p" >/dev/null && "$p" -c 'import sys; sys.exit(sys.version_info < (3, 11))' 2>/dev/null; then
+    python=$p; break
+  fi
+done
+if [ -n "$python" ]; then
+  # First run installs the script's dependencies (private virtualenv): do it now.
+  say "setting up the skill's Python dependencies (once, about a minute)..."
+  "$python" "$last/scripts/skilltree.py" --help >/dev/null \
+    || say "note: could not set up the dependencies now (the skill retries on first use)"
 else
-  say "note: the skill needs uv: curl -LsSf https://astral.sh/uv/install.sh | sh"
+  say "note: the skill needs Python 3.11 or newer: https://www.python.org/downloads/"
 fi
 command -v git >/dev/null || say "note: install git to fetch docs from repositories"
 

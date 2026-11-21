@@ -1,14 +1,4 @@
-#!/usr/bin/env -S uv run --script
-# /// script
-# requires-python = ">=3.11"
-# dependencies = [
-#     "beautifulsoup4>=4.12",
-#     "markdown-it-py>=4.3.0",
-#     "pypandoc-binary>=1.15",
-#     "pyyaml>=6.0.4",
-#     "skills-ref>=0.1.1",
-# ]
-# ///
+#!/usr/bin/env python3
 """Turn a tree of API docs into a tree of agent skills.
 
 Pipeline. Every step reads and writes files in the --out workspace, so you can
@@ -44,11 +34,17 @@ import zipfile
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-import yaml
-from markdown_it import MarkdownIt
-from skills_ref import validate
+sys.dont_write_bytecode = True  # no __pycache__ inside installed skills (often committed)
 
-from docsource import Error, MkdocsLoader, fetch as fetch_docs
+import bootstrap  # noqa: E402
+
+bootstrap.ensure()  # plain Python: installs the dependencies below on first run
+
+import yaml  # noqa: E402
+from markdown_it import MarkdownIt  # noqa: E402
+from skills_ref import validate  # noqa: E402
+
+from docsource import Error, MkdocsLoader, fetch as fetch_docs  # noqa: E402
 
 REFS = Path(__file__).resolve().parent.parent / "references"
 DEFAULT_AGENT = os.environ.get("SKILLTREE_AGENT", "claude -p")

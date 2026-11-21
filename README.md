@@ -9,23 +9,25 @@ the docs from a folder, a git repo or a website, draw the taxonomy, validate,
 package, install) and hands the judgment calls
 (planning the tree, writing each skill) to a CLI agent (`claude -p` by default).
 
-## Requirements
+## Installation & Usage
 
-- [uv](https://docs.astral.sh/uv/): runs the scripts and fetches their dependencies
-- `git`: fetches docs from repositories
-- a CLI agent for the plan and generate steps (`claude -p` by default)
+Every method needs these on your machine (check with `python3 --version` and
+`git --version`):
 
-Install uv if you don't have it:
-
-```sh
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-## Installation
+- [Python 3.11+](https://www.python.org/downloads/). The skill installs its
+  own Python packages into a private virtualenv (`~/.cache/iskills/venv`) the
+  first time it runs. Nothing else to install.
+- [git](https://git-scm.com/downloads), to fetch docs from repositories.
+- An agent CLI that writes the skills: [Claude Code](https://docs.claude.com/en/docs/claude-code/setup)
+  by default (the skill runs `claude -p`, so `claude` must be on your PATH).
+  With another agent, the skill tells it to pass its own command instead.
 
 ### Method 1: installer, into one project (recommended)
 
-Run from the root of your project:
+#### Install
+
+Needs `curl` (preinstalled on macOS and most Linux). From the root of your
+project:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/anteloc/iskills/master/install.sh | sh
@@ -33,47 +35,153 @@ curl -fsSL https://raw.githubusercontent.com/anteloc/iskills/master/install.sh |
 
 It copies the skill into each agent directory the project has (`.claude/`,
 `.agents/`, `.qwen/`, `.codex/`, `.gemini/`, `.opencode/`), or `.claude/` if
-there is none. Run it again to update.
-
-To pick the agent directory, e.g. Qwen Code:
+there is none, and sets up its Python packages. Run it again to update. To
+pick the agent directory, e.g. Qwen Code:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/anteloc/iskills/master/install.sh | sh -s -- --agent qwen
 ```
 
+#### Usage
+
+Start Claude Code in your project (a new session, so it loads the skill)
+and give it a prompt that names the API and, if you know it, where its docs
+are. For example, in a robotics project:
+
+> We're going to simulate our robot arm with MuJoCo. Use iskills to make a
+> skill for the MuJoCo API from https://mujoco.readthedocs.io/en/stable/overview.html
+> and install it in this project.
+
+The agent fetches the docs, builds the skill tree in `~/.cache/iskills/mujoco`,
+installs it next to iskills (e.g. `.claude/skills/mujoco/`) and reads it before
+carrying on. It takes a few minutes. Commit the new skill folder to share it
+with your team.
+
+It also works without asking for it by name. Give it a task that needs an API
+it has no skill for, and it offers to build one first:
+
+> Add a script that loads models/arm.xml with mujoco and steps the simulation
+> for 5 seconds.
+
 ### Method 2: installer, for all your projects
 
-Installs into your personal skill directories (`~/.claude/skills/`, ...):
+#### Install
+
+Needs `curl`. From any directory:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/anteloc/iskills/master/install.sh | sh -s -- --global
 ```
 
+It installs into your personal skill directories (`~/.claude/skills/`, ...),
+so every project sees the skill.
+
+#### Usage
+
+Same as Method 1, in any project. The generated API skills are still
+installed into the project you are working in, not globally:
+
+> We're going to simulate our robot arm with MuJoCo. Use iskills to make a
+> skill for the MuJoCo API from https://mujoco.readthedocs.io/en/stable/overview.html
+> and install it in this project.
+
 ### Method 3: skills CLI
+
+#### Install
+
+Needs [Node.js](https://nodejs.org/) (for `npx`). From the root of your
+project:
 
 ```sh
 npx skills add anteloc/iskills
 ```
 
+Follow its prompts to choose the agents to install for.
+
+#### Usage
+
+Same as Method 1: start a new agent session and give it a prompt, e.g.:
+
+> Use iskills to make a skill for the Click API from
+> https://github.com/pallets/click/tree/main/docs and install it in this project.
+
 ### Method 4: git clone
 
-Into one project (Claude Code):
+#### Install
+
+From the root of your project (Claude Code):
 
 ```sh
 git clone --depth 1 https://github.com/anteloc/iskills .claude/skills/iskills
 ```
 
-Or for all projects:
+Or for all your projects:
 
 ```sh
 git clone --depth 1 https://github.com/anteloc/iskills ~/.claude/skills/iskills
 ```
 
-For other agents, replace `.claude` with `.agents`, `.qwen`, ...
+For other agents, replace `.claude` with `.agents`, `.qwen`, ... Update with
+`git -C .claude/skills/iskills pull`.
+
+#### Usage
+
+Same as Method 1: start a new agent session and give it a prompt, e.g.:
+
+> Use iskills to make a skill for the MuJoCo API from
+> https://github.com/google-deepmind/mujoco/blob/main/doc/index.rst
+> and install it in this project.
+
+The first run takes about a minute longer while the skill sets up its Python
+packages.
+
+### Method 5: command line, without an agent session
+
+Run the pipeline yourself, e.g. to build a skill once and share it.
+
+#### Install
+
+Needs the `claude` CLI on your PATH and signed in. Install it, then run
+`claude` once to sign in:
+
+```sh
+npm install -g @anthropic-ai/claude-code
+```
+
+Then get the scripts anywhere on your machine:
+
+```sh
+git clone --depth 1 https://github.com/anteloc/iskills ~/iskills
+```
+
+#### Usage
+
+Build a skill tree from any docs source (a website, a GitHub folder or
+file, or a local folder) and install it into a project:
+
+```sh
+python3 ~/iskills/scripts/skilltree.py build https://mujoco.readthedocs.io/en/stable/overview.html -o ~/.cache/iskills/mujoco --project /path/to/your/project
+```
+
+Or install it for all your projects with `--to ~/.claude/skills` instead of
+`--project`. The first run sets up the Python packages (about a minute), and
+the agent steps take a few minutes more. To review each step instead (the
+mermaid diagrams `taxonomy.md` and `plan.md` in the workspace), run `fetch`,
+`map`, `plan`, `generate`, `check` and `install` one by one. See
+[SKILL.md](SKILL.md).
+
+Package a built skill as a zip, to share or upload where skills are accepted.
+Pass the `skill:` path that `build` printed (its name comes from the plan):
+
+```sh
+python3 ~/iskills/scripts/skilltree.py package ~/.cache/iskills/mujoco/<skill-name>
+```
+
+Run `python3 ~/iskills/scripts/skilltree.py <command> --help` for every option.
 
 ### Installer options
 
-Pass them after `sh -s --`:
+For Methods 1 and 2, pass them after `sh -s --`:
 
 | Option | Does |
 | --- | --- |
@@ -83,37 +191,6 @@ Pass them after `sh -s --`:
 | `--ref REF` | install a branch, tag or commit (default: `master`) |
 | `--force` | replace an `iskills/` folder the installer did not create |
 
-## Usage
-
-Start a new agent session in the project and ask, for example:
-
-> make a skill for the mujoco API and install it in this project
-
-The agent fetches the docs, builds the skill tree in `~/.cache/iskills/<api>`
-and installs it in the project. It also offers to do this by itself when your
-code starts using an API it has no skill for. Commit the installed skills to
-share them with your team.
-
-## Use the script directly
-
-Only [uv](https://docs.astral.sh/uv/) is needed: the script declares its
-dependencies inline (PEP 723), and `uv run` fetches them on first use.
-
-```sh
-uv run scripts/skilltree.py build ../moonshine/docs/index.md -o build/moonshine
-# or from a repo or a docs site (markdown, Sphinx .rst or HTML):
-#   build https://github.com/org/lib/tree/main/docs -o build/lib
-#   build https://lib.readthedocs.io/en/stable/index.html -o build/lib
-uv run scripts/skilltree.py package build/moonshine/moonshine-voice   # -> build/moonshine/moonshine-voice.zip
-uv run scripts/skilltree.py install build/moonshine/moonshine-voice.zip --to ~/.claude/skills
-```
-
-The zip is a self-contained installer: share it, upload it where skills are
-accepted, or install it with `skilltree.py install`.
-
-Or step by step (`map`, `plan`, `generate`, `check`, `package`, `install`), reviewing the
-mermaid diagrams `taxonomy.md` and `plan.md` in between. See [SKILL.md](SKILL.md).
-
 ## Structure
 
 ```
@@ -122,23 +199,26 @@ iskills/
 ├── install.sh               # one-line installer into a project
 ├── scripts/
 │   ├── skilltree.py         # fetch | map | plan | generate | check | package | install | build
-│   └── docsource.py         # fetch: local / git / website docs -> markdown (pandoc)
+│   ├── docsource.py         # fetch: local / git / website docs -> markdown (pandoc)
+│   ├── bootstrap.py         # first run: installs requirements.txt into a private virtualenv
+│   └── requirements.txt     # runtime Python packages
 ├── references/
 │   ├── planning.md          # agent rules: docs taxonomy -> skill tree plan
 │   ├── writing.md           # agent rules: writing one SKILL.md
 │   └── adding-tools.md      # how to add and register new tools
 ├── examples/moonshine/      # worked example on the Moonshine Voice docs
-├── pyproject.toml           # uv project
+├── pyproject.toml           # dev environment (optional, uv)
 ├── LICENSE                  # AGPL-3.0 (code)
 └── CC-BY-SA-4.0             # CC BY-SA 4.0 (documentation/research)
 ```
 
 ## Develop
 
-This is a [uv](https://docs.astral.sh/uv/) project: add dependencies with
-`uv add <pkg>` (and add it to the script's inline `# /// script` block too),
-run tools with `uv run scripts/<tool>.py`. To add a new tool,
-follow [references/adding-tools.md](references/adding-tools.md).
+Run the scripts with `python3 scripts/skilltree.py ...`: no setup needed.
+Runtime packages are listed in `scripts/requirements.txt`; `pyproject.toml`
+mirrors them for an optional [uv](https://docs.astral.sh/uv/) dev environment
+(`uv sync`). To add a new tool, follow
+[references/adding-tools.md](references/adding-tools.md).
 
 ## License
 

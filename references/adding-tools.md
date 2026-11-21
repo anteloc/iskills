@@ -1,9 +1,11 @@
 # Adding a tool to this skill
 
 Tools are subcommands of [scripts/skilltree.py](../scripts/skilltree.py), a
-self-contained script: it declares its dependencies inline (PEP 723), so
-`uv run <skill-dir>/scripts/skilltree.py <command>` works with no install or
-sync step. Keep it that way: no packaging, no entry points.
+plain Python script: `python3 <skill-dir>/scripts/skilltree.py <command>`
+works with no install step, because [scripts/bootstrap.py](../scripts/bootstrap.py)
+installs [scripts/requirements.txt](../scripts/requirements.txt) into a private
+virtualenv on first run. Keep it that way: no packaging, no entry points, no
+tool beyond Python.
 
 ## Checklist
 
@@ -13,9 +15,9 @@ sync step. Keep it that way: no packaging, no entry points.
    `agent` parent parsers for the shared options.
 3. Document it in `SKILL.md` (pipeline table plus a short section): the
    agent only discovers tools that are documented there.
-4. Third-party packages: add them to the script's inline `# /// script`
-   `dependencies` block (that is what `uv run` installs), and `uv add <pkg>`
-   from the repo root so the dev environment matches. Prefer a ready-made
+4. Third-party packages: add them to `scripts/requirements.txt` (what users
+   get) and to `MODULES` in `scripts/bootstrap.py` (the import names it checks
+   for), and to `pyproject.toml` for the dev environment. Prefer a ready-made
    package over ad-hoc code.
 5. Test it (see below) before committing.
 
@@ -49,9 +51,9 @@ p.set_defaults(func=cmd_hello)
 ## Testing
 
 ```bash
-uv run scripts/skilltree.py <name> --help
-uv run scripts/skilltree.py <name> <example-input>
-uv run scripts/skilltree.py <name> --json <example-input>
+python3 scripts/skilltree.py <name> --help
+python3 scripts/skilltree.py <name> <example-input>
+python3 scripts/skilltree.py <name> --json <example-input>
 ```
 
 Verify the exit code (`echo $?`) for both a successful and a failing run.

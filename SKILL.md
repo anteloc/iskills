@@ -19,11 +19,13 @@ Large API docsets bloat an agent's context and mix concerns. This skill
 turns a docs tree into a **skill tree** that agents navigate like a person
 navigates the docs: start at the root, open only the subskill for the task.
 
-Run the script with [uv](https://docs.astral.sh/uv/); it declares its own
-dependencies inline, so there is nothing to install first:
+Run the script with Python 3.11+ (`python` instead of `python3` on
+Windows). Nothing to install first: on its first run it installs its own
+dependencies into a private virtualenv (`~/.cache/iskills/venv`, about a
+minute), then reuses it:
 
 ```bash
-uv run <skill-dir>/scripts/skilltree.py <command> ...
+python3 <skill-dir>/scripts/skilltree.py <command> ...
 ```
 
 `<skill-dir>` is this skill's directory (the one holding this file). The
@@ -65,7 +67,7 @@ the task needs an API that has no skill yet.
    (`~/.cache/iskills/<api>`), and install into the project:
 
    ```bash
-   uv run <skill-dir>/scripts/skilltree.py build <source> \
+   python3 <skill-dir>/scripts/skilltree.py build <source> \
        -o ~/.cache/iskills/<api> --project <project-dir>
    ```
 
@@ -103,13 +105,13 @@ Every step reads and writes files in a workspace (`-o/--out`, default
 one go.
 
 ```bash
-uv run <skill-dir>/scripts/skilltree.py fetch https://github.com/org/lib/tree/main/docs -o work
-uv run <skill-dir>/scripts/skilltree.py map <root printed by fetch> -o work
-uv run <skill-dir>/scripts/skilltree.py plan -o work
-uv run <skill-dir>/scripts/skilltree.py generate -o work
-uv run <skill-dir>/scripts/skilltree.py check work/<skill-name>
-uv run <skill-dir>/scripts/skilltree.py package work/<skill-name>  # -> work/<skill-name>.zip
-uv run <skill-dir>/scripts/skilltree.py install work/<skill-name>.zip --to ~/.claude/skills
+python3 <skill-dir>/scripts/skilltree.py fetch https://github.com/org/lib/tree/main/docs -o work
+python3 <skill-dir>/scripts/skilltree.py map <root printed by fetch> -o work
+python3 <skill-dir>/scripts/skilltree.py plan -o work
+python3 <skill-dir>/scripts/skilltree.py generate -o work
+python3 <skill-dir>/scripts/skilltree.py check work/<skill-name>
+python3 <skill-dir>/scripts/skilltree.py package work/<skill-name>  # -> work/<skill-name>.zip
+python3 <skill-dir>/scripts/skilltree.py install work/<skill-name>.zip --to ~/.claude/skills
 ```
 
 All commands accept `--json`, and exit non-zero on failure.
