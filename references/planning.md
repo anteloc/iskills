@@ -35,7 +35,7 @@ their way through the docs to get one job done, and lay out that path.
 
 ## Output
 
-Reply with **only** a JSON object, no prose and no code fence, in this shape
+Your answer is **only** a JSON object, no prose and no code fence, in this shape
 (`children` nodes have the same shape, recursively):
 
 {

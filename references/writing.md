@@ -6,7 +6,7 @@ get that agent from "I need to do X" to working code.
 
 ## Output
 
-Reply with **only** the markdown body:
+Your answer is **only** the markdown body:
 
 - No YAML frontmatter, and no code fence around the whole answer.
 - Do **not** write a subskills list or a source docs list: both are appended

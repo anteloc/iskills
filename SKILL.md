@@ -63,7 +63,7 @@ the task needs an API that has no skill yet.
 
    Pick the version the project uses: a tag (`--ref v1.2.3`, or in the
    URL) for a repo, the matching version path (`/en/1.2.3/`) for a site.
-4. **Build and install** in one go. Keep the workspace out of the project
+4. **Build and install.** Keep the workspace out of the project
    (`~/.cache/iskills/<api>`), and install into the project:
 
    ```bash
@@ -71,12 +71,20 @@ the task needs an API that has no skill yet.
        -o ~/.cache/iskills/<api> --project <project-dir>
    ```
 
+   **You** do the planning and writing: run it without `--agent`. It does
+   the mechanical steps, then stops at the first step that needs judgment
+   and prints `pending:` prompt files. For each one, read it, do what it
+   says, and write the answer to the path at its end. Then run the same
+   `build` command again. It goes plan → skills → check → install, stopping
+   twice (once for the plan, once for the skill bodies), and is done when it
+   prints `installed:`. The skill prompts are independent: if you can run
+   subagents, give each one a prompt file and its answer path, in parallel.
+   Show the user `taxonomy.md` and `plan.md` (mermaid diagrams) on the way.
+
    `--project` installs into `<project-dir>/<agent-dir>/skills/` for each
    agent config directory the project has (`.claude`, `.agents`, `.qwen`,
    `.codex`, `.gemini`, `.opencode`). If it has none, use
-   `--to <project-dir>/.claude/skills` (or your agent's equivalent). Pass
-   `--agent` to run the agent steps with the agent you are (see
-   [Choosing the agent](#choosing-the-agent)); the default is `claude -p`.
+   `--to <project-dir>/.claude/skills` (or your agent's equivalent).
 5. **Use it.** The new skill is in the project now, but agents usually
    load skills only at session start. Read its root `SKILL.md` and follow
    the links to the subskill your task needs, then carry on with the
@@ -95,8 +103,8 @@ Every step reads and writes files in a workspace (`-o/--out`, default
 | --- | --- | --- | --- |
 | 0. Fetch | `fetch <source>` | `source/` (git only), root doc path | script |
 | 1. Map | `map <root.md>` | `taxonomy.json`, `taxonomy.md` | script |
-| 2. Plan | `plan` | `plan.json`, `plan.md` | agent |
-| 3. Generate | `generate` | `<skill-name>/**/SKILL.md` | agent |
+| 2. Plan | `plan` | `plan.json`, `plan.md` | you (or `--agent`) |
+| 3. Generate | `generate` | `<skill-name>/**/SKILL.md` | you (or `--agent`) |
 | 4. Check | `check <out>/<skill-name>` | report | script |
 | 5. Package | `package <out>/<skill-name>` | `<skill-name>.zip` | script |
 | 6. Install | `install <dir-or-zip> --to <skills-dir> \| --project <dir>` | skill copy | script |
@@ -151,20 +159,25 @@ mermaid diagram) before planning.
 
 ### 2. Plan
 
-An agent groups the docs into a skill tree following
-[references/planning.md](references/planning.md): root = core concepts, one
+You (or the `--agent`) group the docs into a skill tree following
+[references/planning.md](references/planning.md); the prompt is
+`<out>/prompts/plan.md`, the answer `<out>/answers/plan.json`: root = core concepts, one
 subskill per task, reference pages in their own branch, non-usage pages
 (license, support, ...) left out. Review `plan.md` with the user. Edit
 `plan.json` by hand when needed: `generate` re-validates it.
 
 ### 3. Generate
 
-An agent writes each node in parallel (`-j`, default 4) following
-[references/writing.md](references/writing.md), from that node's source docs.
+You (or the `--agent`, `-j` in parallel, default 4) write each node's body
+following [references/writing.md](references/writing.md), from that node's
+source docs: one prompt per node in `<out>/prompts/<skill>/.../<node>.md`,
+answers in `<out>/answers/` at the same paths.
 The script adds the frontmatter, a linked **Subskills** list, and verbatim
 copies of the source docs under `references/`. Rewrite single nodes with
-`--only <name> ...`. To regenerate from scratch, delete `<out>/<skill-name>`
-first (`generate` does not remove skills that left the plan).
+`--only <name> ...`. Saved answers are reused on later runs: `--redo` asks
+again (writes fresh prompts, or re-asks the `--agent`). To regenerate from
+scratch, delete `<out>/<skill-name>` and `<out>/answers/` first (`generate`
+does not remove skills that left the plan).
 
 ### 4. Check
 
@@ -188,19 +201,17 @@ above. Installs a skill directory or a `package` zip into a skills directory
 with `--project <dir>` into each agent's skills directory in that project.
 Refuses to overwrite unless `--force`.
 
-## Choosing the agent
+## Who does the judgment steps
 
-Agent steps pipe a prompt to any CLI agent on stdin and read its answer on
-stdout: `claude -p` by default. Override with `--agent "<command>"` or the
-`SKILLTREE_AGENT` environment variable. When running from another
-project, use the agent you are: any non-interactive command that reads the
-prompt on stdin and prints only the answer.
+Plan and generate need an agent, and by default it is **you**, the agent
+using this skill: without `--agent`, those steps write prompt files and wait
+for your answers (see step 4 of the on-demand workflow). Do not pass
+`--agent` yourself: it hands the work to another agent.
 
-You can also do steps 2 and 3 yourself, without the CLI: read
-`taxonomy.json`, write `plan.json` (`{"docs_dir": ..., "skill": {...}}`, with
-`docs_dir` relative to the workspace, as `map` writes it) following
-references/planning.md, then write each SKILL.md following
-references/writing.md, and finish with `check`.
+`--agent "<command>"` is for people running the pipeline by hand on the
+command line: the script pipes each prompt to that command on stdin and saves
+what it prints as the answer, e.g. `--agent "claude -p"`. There is no default,
+so whoever runs it chooses, and knows, which agent writes the skill.
 
 ## Output layout
 
@@ -208,6 +219,7 @@ references/writing.md, and finish with `check`.
 <out>/
 ├── taxonomy.json / taxonomy.md   docs tree (+ mermaid)
 ├── plan.json / plan.md           skill tree (+ mermaid)
+├── prompts/ , answers/           judgment tasks and their answers (plan.json, <skill>/**.md)
 └── <api-name>/                   the skill to install
     ├── SKILL.md                  core concepts + Subskills list
     ├── references/               verbatim source docs

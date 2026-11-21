@@ -15,10 +15,14 @@ stop, inspect or hand-edit between steps:
                 or into a project's agent skill directories (--project)
   build SOURCE  fetch + map + plan + generate + check (+ install)
 
-Agent steps shell out to any CLI agent that reads a prompt on stdin and prints
-its answer on stdout: `claude -p` by default, or --agent / $SKILLTREE_AGENT.
-The agent instructions are references/planning.md and references/writing.md,
-so the CLI and an agent doing the steps by hand follow the same rules.
+The judgment steps (plan, generate) need an agent. By default that is the
+agent running this script: the step writes each task as a prompt file under
+<out>/prompts/ (saying where the answer goes, in <out>/answers/), stops, and
+lists what is pending; the agent writes the answers and runs the same command
+again. On the command line, pass --agent "<command>" (e.g. --agent "claude -p")
+to have the script pipe each prompt to that agent and save its answers itself.
+Answers are reused on later runs (--redo asks again). The agent instructions
+are references/planning.md and references/writing.md either way.
 """
 
 import argparse
@@ -47,7 +51,6 @@ from skills_ref import validate  # noqa: E402
 from docsource import Error, MkdocsLoader, fetch as fetch_docs  # noqa: E402
 
 REFS = Path(__file__).resolve().parent.parent / "references"
-DEFAULT_AGENT = os.environ.get("SKILLTREE_AGENT", "claude -p")
 NAME_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 MAX_LINES = 500  # Agent Skills guidance for a SKILL.md body
 
@@ -206,6 +209,40 @@ def ask(agent: str, prompt: str) -> str:
     return result.stdout.strip()
 
 
+def answer(out: Path, rel: str, prompt: str, what: str, agent: str | None,
+           redo: bool) -> str | None:
+    """The answer to a prompt: saved, from --agent, or None after writing the prompt.
+
+    rel names the task (e.g. "plan.json", "<skill>/<sub>.md"): its answer lives
+    in <out>/answers/<rel>, its prompt in <out>/prompts/<rel without suffix>.md.
+    """
+    ans = out / "answers" / rel
+    if ans.is_file() and not redo:
+        return ans.read_text(encoding="utf-8")
+    ans.parent.mkdir(parents=True, exist_ok=True)
+    if agent:
+        text = ask(agent, prompt)
+        ans.write_text(text + "\n", encoding="utf-8")
+        return text
+    ans.unlink(missing_ok=True)
+    prompt_file = out / "prompts" / Path(rel).with_suffix(".md")
+    prompt_file.parent.mkdir(parents=True, exist_ok=True)
+    prompt_file.write_text(prompt + f"""
+
+# Where your answer goes
+
+Write {what}, and nothing else, to this file:
+
+    {ans.resolve()}
+""", encoding="utf-8")
+    return None
+
+
+def pending_note(cmd: str) -> str:
+    return (f"read each pending prompt, write its answer where it says, then run `{cmd}` "
+            "again (prompts are independent: hand them to subagents in parallel if you can)")
+
+
 def unfence(text: str) -> str:
     """Drop a code fence wrapping the whole answer, which agents sometimes add."""
     m = re.fullmatch(r"```[\w-]*\n(.*)\n```", text.strip(), re.DOTALL)
@@ -261,11 +298,15 @@ def cmd_plan(args) -> dict:
         "# Taxonomy to plan from",
         "```json\n" + json.dumps(taxonomy["tree"], indent=1) + "\n```",
     ])
-    answer = ask(args.agent, prompt)
+    text = answer(out, "plan.json", prompt, "the JSON object of the skill tree",
+                  args.agent, args.redo)
+    if text is None:
+        return {"pending": [str(out / "prompts" / "plan.md")], "next": pending_note("plan")}
     try:
-        skill = json.loads(answer[answer.find("{"):answer.rfind("}") + 1])
+        skill = json.loads(text[text.find("{"):text.rfind("}") + 1])
     except json.JSONDecodeError as exc:
-        raise Error(f"agent did not return a JSON plan ({exc}):\n{answer[:800]}")
+        raise Error(f"the plan answer ({out / 'answers' / 'plan.json'}) is not a JSON "
+                    f"object ({exc}); fix or delete it:\n{text[:800]}")
     plan = {"docs_dir": taxonomy["docs_dir"], "skill": skill}
     (out / "plan.json").write_text(json.dumps(plan, indent=2) + "\n")
     diagram = mermaid(skill, lambda n: f"<b>{n['name']}</b>" + (
@@ -321,14 +362,12 @@ def render(node: dict, body: str) -> str:
     return "\n\n".join(parts) + "\n"
 
 
-def write_node(node, here: Path, ancestors, plan: dict, out: Path, agent: str) -> str:
-    body = unfence(ask(agent, node_prompt(node, here, ancestors, plan)))
+def write_node(node, here: Path, plan: dict, out: Path, body: str) -> None:
     node_dir = out / here
     (node_dir / "references").mkdir(parents=True, exist_ok=True)
     for src in node.get("sources", []):
         shutil.copyfile(Path(plan["docs_dir"]) / src, node_dir / "references" / ref_name(src))
-    (node_dir / "SKILL.md").write_text(render(node, body))
-    return str(here)
+    (node_dir / "SKILL.md").write_text(render(node, unfence(body)))
 
 
 def cmd_generate(args) -> dict:
@@ -338,18 +377,29 @@ def cmd_generate(args) -> dict:
         return {"problems": problems}
     nodes = [n for n in walk(plan["skill"]) if not args.only or n[0]["name"] in args.only]
 
+    redo = args.redo or bool(args.only)
+
     def job(item):
         node, here, ancestors = item
         try:
-            done = write_node(node, here, ancestors, plan, out, args.agent)
-            print(f"wrote {done}/SKILL.md", file=sys.stderr)
-            return None
+            body = answer(out, f"{here}.md", node_prompt(node, here, ancestors, plan),
+                          "the markdown body of this skill", args.agent, redo)
         except Error as exc:
-            return f"{here}: {exc}"
+            return "problem", f"{here}: {exc}"
+        if body is None:
+            return "pending", str(out / "prompts" / f"{here}.md")
+        write_node(node, here, plan, out, body)
+        print(f"wrote {here}/SKILL.md", file=sys.stderr)
+        return "written", str(here)
 
-    with ThreadPoolExecutor(args.jobs) as pool:
-        problems = [p for p in pool.map(job, nodes) if p]
-    return {"skill": str(out / plan["skill"]["name"]), "nodes": len(nodes), "problems": problems}
+    with ThreadPoolExecutor(args.jobs if args.agent else 1) as pool:
+        results = list(pool.map(job, nodes))
+    result = {"skill": str(out / plan["skill"]["name"]),
+              "written": sum(1 for kind, _ in results if kind == "written"),
+              "problems": [v for kind, v in results if kind == "problem"]}
+    if pending := [v for kind, v in results if kind == "pending"]:
+        result |= {"pending": pending, "next": pending_note("generate")}
+    return result
 
 
 # --------------------------------------------------------------------------
@@ -452,7 +502,9 @@ def cmd_build(args) -> dict:
     result |= cmd_map(args)
     for step in (cmd_plan, cmd_generate):
         result |= step(args)
-        if result.get("problems"):
+        if result.get("problems") or result.get("pending"):
+            if result.get("pending"):
+                result["next"] = pending_note("build")  # re-run the whole command
             return result
     args.dir = result["skill"]
     result |= cmd_check(args)
@@ -472,10 +524,13 @@ def main() -> int:
     workspace.add_argument("-o", "--out", default="build",
                            help="workspace directory (default: build)")
     agent = argparse.ArgumentParser(add_help=False)
-    agent.add_argument("--agent", default=DEFAULT_AGENT,
-                       help=f"agent command, prompt on stdin (default: {DEFAULT_AGENT!r})")
+    agent.add_argument("--agent", metavar="COMMAND",
+                       help='agent command that reads a prompt on stdin and prints the answer, '
+                       'e.g. "claude -p" (default: none, write prompts for the calling agent)')
+    agent.add_argument("--redo", action="store_true",
+                       help="ignore saved answers and ask again")
     agent.add_argument("-j", "--jobs", type=int, default=4,
-                       help="skills written in parallel (default: 4)")
+                       help="with --agent: skills written in parallel (default: 4)")
 
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = parser.add_subparsers(required=True, metavar="command")
@@ -538,7 +593,11 @@ def main() -> int:
         print(json.dumps(result, indent=2))
     else:
         for key, value in result.items():
-            if key != "problems":
+            if key == "problems":
+                continue
+            if isinstance(value, list):
+                print(f"{key}:" + "".join(f"\n  {v}" for v in value))
+            else:
                 print(f"{key}: {value}")
         for problem in result.get("problems", []):
             print(f"problem: {problem}", file=sys.stderr)

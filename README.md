@@ -4,10 +4,13 @@ An installable [Agent Skill](https://agentskills.io) that turns API docs into
 a **skill tree**: a root `SKILL.md` with the API's core concepts, plus linked
 subskills for each task, so agents load only the part of the API they need.
 
-A Python script (`scripts/skilltree.py`) does the deterministic work (fetch
-the docs from a folder, a git repo or a website, draw the taxonomy, validate,
-package, install) and hands the judgment calls
-(planning the tree, writing each skill) to a CLI agent (`claude -p` by default).
+A Python script (`scripts/skilltree.py`) does the mechanical work: fetch the
+docs (from a folder, a git repo or a website), map them, validate, package and
+install. The judgment calls (planning the tree, writing each skill) are done
+by the agent using the skill, in your session: the script hands it each task
+as a prompt file and assembles its answers. When you run the script yourself
+on the command line, you name the agent that does them, e.g.
+`--agent "claude -p"`.
 
 ## Installation & Usage
 
@@ -18,9 +21,8 @@ Every method needs these on your machine (check with `python3 --version` and
   own Python packages into a private virtualenv (`~/.cache/iskills/venv`) the
   first time it runs. Nothing else to install.
 - [git](https://git-scm.com/downloads), to fetch docs from repositories.
-- An agent CLI that writes the skills: [Claude Code](https://docs.claude.com/en/docs/claude-code/setup)
-  by default (the skill runs `claude -p`, so `claude` must be on your PATH).
-  With another agent, the skill tells it to pass its own command instead.
+- An agent that uses skills (Claude Code, Qwen Code, Codex, ...). It is
+  the one that plans and writes the generated skills.
 
 ### Method 1: installer, into one project (recommended)
 
@@ -137,12 +139,15 @@ packages.
 
 ### Method 5: command line, without an agent session
 
-Run the pipeline yourself, e.g. to build a skill once and share it.
+Run the pipeline yourself, e.g. to build a skill once and share it. You pick
+the agent that plans and writes the skills with `--agent`: any command that
+reads a prompt on stdin and prints the answer. The examples use Claude Code
+(`claude -p`).
 
 #### Install
 
-Needs the `claude` CLI on your PATH and signed in. Install it, then run
-`claude` once to sign in:
+The agent CLI you pass to `--agent` must be installed and signed in. For
+Claude Code, install it, then run `claude` once to sign in:
 
 ```sh
 npm install -g @anthropic-ai/claude-code
@@ -160,15 +165,17 @@ Build a skill tree from any docs source (a website, a GitHub folder or
 file, or a local folder) and install it into a project:
 
 ```sh
-python3 ~/iskills/scripts/skilltree.py build https://mujoco.readthedocs.io/en/stable/overview.html -o ~/.cache/iskills/mujoco --project /path/to/your/project
+python3 ~/iskills/scripts/skilltree.py build https://mujoco.readthedocs.io/en/stable/overview.html -o ~/.cache/iskills/mujoco --agent "claude -p" --project /path/to/your/project
 ```
 
 Or install it for all your projects with `--to ~/.claude/skills` instead of
 `--project`. The first run sets up the Python packages (about a minute), and
-the agent steps take a few minutes more. To review each step instead (the
-mermaid diagrams `taxonomy.md` and `plan.md` in the workspace), run `fetch`,
-`map`, `plan`, `generate`, `check` and `install` one by one. See
-[SKILL.md](SKILL.md).
+the agent steps take a few minutes more. Without `--agent`, `build` stops and
+lists prompt files under `~/.cache/iskills/mujoco/prompts/` for you (or any
+agent) to answer in `~/.cache/iskills/mujoco/answers/`; running `build` again
+picks the answers up. To review each step (the mermaid diagrams `taxonomy.md`
+and `plan.md` in the workspace), run `fetch`, `map`, `plan`, `generate`,
+`check` and `install` one by one. See [SKILL.md](SKILL.md).
 
 Package a built skill as a zip, to share or upload where skills are accepted.
 Pass the `skill:` path that `build` printed (its name comes from the plan):
