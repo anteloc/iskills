@@ -9,25 +9,51 @@ the docs from a folder, a git repo or a website, draw the taxonomy, validate,
 package, install) and hands the judgment calls
 (planning the tree, writing each skill) to a CLI agent (`claude -p` by default).
 
-## Structure
+## Install into a project
 
-```
-iskills/
-├── SKILL.md                 # the skill: how to run the pipeline
-├── scripts/
-│   ├── skilltree.py         # fetch | map | plan | generate | check | package | install | build
-│   └── docsource.py         # fetch: local / git / website docs -> markdown (pandoc)
-├── references/
-│   ├── planning.md          # agent rules: docs taxonomy -> skill tree plan
-│   ├── writing.md           # agent rules: writing one SKILL.md
-│   └── adding-tools.md      # how to add and register new tools
-├── examples/moonshine/      # worked example on the Moonshine Voice docs
-├── pyproject.toml           # uv project
-├── LICENSE                  # AGPL-3.0 (code)
-└── CC-BY-SA-4.0             # CC BY-SA 4.0 (documentation/research)
+From the project's root:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/anteloc/iskills/master/install.sh | sh
 ```
 
-## Quick start
+That's it. It copies the skill into every agent directory the project
+already has (`.claude/`, `.agents/`, `.qwen/`, `.codex/`, `.gemini/`,
+`.opencode/`; `.claude/` if none), and pre-loads the script's dependencies.
+Start a new agent session and ask for an API skill, e.g. *"make a skill for
+the mujoco API and install it in this project"*. The agent also offers to do
+it by itself when the code starts using an API it has no skill for. It
+fetches the docs, builds the skill tree in `~/.cache/iskills/<api>`, and
+installs it next to iskills in the project. Commit both to share them with
+your team.
+
+Options go after `sh -s --`:
+
+| Option | Does |
+| --- | --- |
+| `DIR` | install into that project instead of the current directory |
+| `--global` | install into your personal skill directories (`~/.claude/skills`, ...) for all projects |
+| `--agent NAME` | pick the agent directory (`claude`, `agents`, `qwen`, ...; repeatable) |
+| `--ref REF` | install a branch, tag or commit (default: `master`) |
+| `--force` | replace an `iskills/` folder the installer did not create |
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/anteloc/iskills/master/install.sh | sh -s -- --global
+```
+
+Run it again to update. From a clone, `./install.sh <project-dir>`
+installs that clone instead of downloading.
+
+**Requirements:** [uv](https://docs.astral.sh/uv/) (it runs the scripts and
+fetches their dependencies itself), `git` (to fetch docs from repositories),
+and a CLI agent for the plan and generate steps (`claude -p` by default; the
+skill tells the agent how to pass its own command). Only the runtime files are
+installed (`SKILL.md`, `scripts/`, `references/`, licenses), not the examples.
+
+Other ways: `npx skills add anteloc/iskills`, or clone this repo into a skills
+directory (`git clone https://github.com/anteloc/iskills ~/.claude/skills/iskills`).
+
+## Use the script directly
 
 Only [uv](https://docs.astral.sh/uv/) is needed: the script declares its
 dependencies inline (PEP 723), and `uv run` fetches them on first use.
@@ -47,53 +73,23 @@ accepted, or install it with `skilltree.py install`.
 Or step by step (`map`, `plan`, `generate`, `check`, `package`, `install`), reviewing the
 mermaid diagrams `taxonomy.md` and `plan.md` in between. See [SKILL.md](SKILL.md).
 
-## Use it from other projects
+## Structure
 
-Install this skill where your agent finds it in every project (personal
-skills directory, below) or in one project (`<project>/.claude/skills/iskills`,
-etc.). Then, when a task in that project needs an API with no skill yet
-(because you ask for it, or because the agent sees the code depending on
-it), the agent fetches the API's docs, builds a skill tree in
-`~/.cache/iskills/<api>` and installs it into that project:
-
-```bash
-uv run <iskills-dir>/scripts/skilltree.py build https://github.com/org/lib/tree/v1.2/docs \
-    -o ~/.cache/iskills/lib --project .
 ```
-
-`--project` installs into every agent directory the project has (`.claude`,
-`.agents`, `.qwen`, ...). Commit the installed skill to share it with the
-team. Requirements: `uv` and `git` on the PATH, plus a CLI agent for the
-plan and generate steps (`claude -p` by default, `--agent` to change it).
-
-## Install
-
-### With the skills CLI
-
-```bash
-npx skills add anteloc/iskills
-```
-
-### Manually
-
-Clone (or copy) this repo into your agent's skills directory as `iskills`:
-
-```bash
-git clone git@github.com:anteloc/iskills.git ~/.agents/skills/iskills
-```
-
-Common skill directories:
-
-| Agent       | Personal (all projects)   | Project-local        |
-|-------------|---------------------------|----------------------|
-| Shared      | `~/.agents/skills/`       | `.agents/skills/`    |
-| Qwen Code   | `~/.qwen/skills/`         | `.qwen/skills/`      |
-| Claude Code | `~/.claude/skills/`       | `.claude/skills/`    |
-
-A symlink works too, so one checkout serves every agent:
-
-```bash
-ln -s "$(pwd)" ~/.qwen/skills/iskills
+iskills/
+├── SKILL.md                 # the skill: how to run the pipeline
+├── install.sh               # one-line installer into a project
+├── scripts/
+│   ├── skilltree.py         # fetch | map | plan | generate | check | package | install | build
+│   └── docsource.py         # fetch: local / git / website docs -> markdown (pandoc)
+├── references/
+│   ├── planning.md          # agent rules: docs taxonomy -> skill tree plan
+│   ├── writing.md           # agent rules: writing one SKILL.md
+│   └── adding-tools.md      # how to add and register new tools
+├── examples/moonshine/      # worked example on the Moonshine Voice docs
+├── pyproject.toml           # uv project
+├── LICENSE                  # AGPL-3.0 (code)
+└── CC-BY-SA-4.0             # CC BY-SA 4.0 (documentation/research)
 ```
 
 ## Develop

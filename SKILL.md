@@ -215,7 +215,7 @@ references/writing.md, and finish with `check`.
 Subskills are plain SKILL.md files in subdirectories, linked from their
 parent. Agents discover only the root skill and follow the links on demand.
 
-Worked example: [examples/moonshine/](examples/moonshine/) (Moonshine Voice).
+Worked example: [examples/moonshine/](https://github.com/anteloc/iskills/tree/master/examples/moonshine) (Moonshine Voice).
 
 ## Adding tools
 
