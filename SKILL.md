@@ -2,46 +2,121 @@
 name: iskills
 license: AGPL-3.0
 description: >
-  Installable skill scaffold with bundled Python tools. Includes text_stats,
-  which counts lines, words, and characters in files or piped stdin, with
-  optional JSON output. Use when the user asks for text or file statistics
-  (line, word, or character counts), or when adding new tools to this skill.
+  Turn a set of API docs (markdown, e.g. a mkdocs site) into an installable
+  tree of agent skills: a root SKILL.md with the API's core concepts and
+  linked subskills for each task, so agents load only the part of the API a
+  task needs. Use when the user wants to make a skill from API documentation,
+  convert docs into skills or subskills, map a docs taxonomy, or install a
+  generated skill tree.
 ---
 
-# iskills
+# iskills: API docs → skill tree
 
-An installable agent skill with bundled command-line tools. All paths below
-are relative to this skill's directory.
+Large API docsets bloat an agent's context and mix concerns. This skill
+turns a docs tree into a **skill tree** that agents navigate like a person
+navigates the docs: start at the root, open only the subskill for the task.
 
-## Tools
-
-### text_stats
-
-Count lines, words, and characters in one or more files, or in stdin.
-Standard library only — run it with any Python 3.10+.
+All paths below are relative to this skill's directory. Run the CLI with:
 
 ```bash
-# One or more files
-python3 scripts/text_stats.py README.md SKILL.md
-
-# Piped input
-cat notes.txt | python3 scripts/text_stats.py
-
-# Machine-readable output (JSON array, one object per source)
-python3 scripts/text_stats.py --json README.md
+uv run --directory <skill-dir> scripts/skilltree.py <command> ...
 ```
 
-Exit code is 0 on success, 1 if any input could not be read (details on
-stderr).
+Use absolute paths for the docs and `--out` (or paths relative to the skill
+directory, since `--directory` changes into it).
+
+## Pipeline
+
+Every step reads and writes files in a workspace (`-o/--out`, default
+`build/`), so you can stop, review or hand-edit between steps.
+
+| Step | Command | Writes | Who |
+| --- | --- | --- | --- |
+| 1. Map | `map <root.md>` | `taxonomy.json`, `taxonomy.md` | script |
+| 2. Plan | `plan` | `plan.json`, `plan.md` | agent |
+| 3. Generate | `generate` | `<skill-name>/**/SKILL.md` | agent |
+| 4. Check | `check <out>/<skill-name>` | report | script |
+| 5. Install | `install <out>/<skill-name> --to <skills-dir>` | copy | script |
+
+`build <root.md> [--install <skills-dir>]` runs 1-4 (and 5) in one go.
+
+```bash
+cd <skill-dir>
+uv run scripts/skilltree.py map /abs/docs/index.md -o /abs/work
+uv run scripts/skilltree.py plan -o /abs/work
+uv run scripts/skilltree.py generate -o /abs/work
+uv run scripts/skilltree.py check /abs/work/<skill-name>
+uv run scripts/skilltree.py install /abs/work/<skill-name> --to ~/.claude/skills
+```
+
+All commands accept `--json`, and exit non-zero on failure.
+
+### 1. Map
+
+Crawls the docs from the root doc. If a `mkdocs.yml` with a `nav:` sits above
+the root, its nav is the hierarchy (the authors' own). Otherwise the script
+follows local `.md` links breadth-first. Show the user `taxonomy.md` (a
+mermaid diagram) before planning.
+
+### 2. Plan
+
+An agent groups the docs into a skill tree following
+[references/planning.md](references/planning.md): root = core concepts, one
+subskill per task, reference pages in their own branch, non-usage pages
+(license, support, ...) left out. Review `plan.md` with the user. Edit
+`plan.json` by hand when needed: `generate` re-validates it.
+
+### 3. Generate
+
+An agent writes each node in parallel (`-j`, default 4) following
+[references/writing.md](references/writing.md), from that node's source docs.
+The script adds the frontmatter, a linked **Subskills** list, and verbatim
+copies of the source docs under `references/`. Rewrite single nodes with
+`--only <name> ...`. To regenerate from scratch, delete `<out>/<skill-name>`
+first (`generate` does not remove skills that left the plan).
+
+### 4. Check
+
+Runs the official [`skills-ref`](https://agentskills.io) validator on every
+SKILL.md, then checks local links, the 500-line limit, and that every
+subskill is linked from its parent. Fix problems with `generate --only` or by
+editing the file.
+
+### 5. Install
+
+Only when the user asks. Copies the root skill directory into a skills
+directory (`--to`, default `~/.agents/skills`; Claude Code uses
+`~/.claude/skills`). Refuses to overwrite unless `--force`.
+
+## Choosing the agent
+
+Agent steps pipe a prompt to any CLI agent on stdin and read its answer on
+stdout: `claude -p` by default. Override with `--agent "<command>"` or the
+`SKILLTREE_AGENT` environment variable.
+
+You can also do steps 2 and 3 yourself, without the CLI: read
+`taxonomy.json`, write `plan.json` (`{"docs_dir": ..., "skill": {...}}`, with
+`docs_dir` relative to the workspace, as `map` writes it) following
+references/planning.md, then write each SKILL.md following
+references/writing.md, and finish with `check`.
+
+## Output layout
+
+```
+<out>/
+├── taxonomy.json / taxonomy.md   docs tree (+ mermaid)
+├── plan.json / plan.md           skill tree (+ mermaid)
+└── <api-name>/                   the skill to install
+    ├── SKILL.md                  core concepts + Subskills list
+    ├── references/               verbatim source docs
+    └── <task>/SKILL.md           subskill, same shape, nested
+```
+
+Subskills are plain SKILL.md files in subdirectories, linked from their
+parent. Agents discover only the root skill and follow the links on demand.
+
+Worked example: [examples/moonshine/](examples/moonshine/) (Moonshine Voice).
 
 ## Adding tools
 
-See [references/adding-tools.md](references/adding-tools.md) for the tool
-conventions and the checklist for registering a new tool in this skill.
-
-## Conventions
-
-- Prefer standard-library-only scripts so the skill works without setup.
-- When a tool needs third-party packages, add them with `uv add <pkg>` and
-  run the tool with `uv run --directory <skill-dir> scripts/<tool>.py`.
-- Every tool supports `--help` and `--json`, and exits non-zero on failure.
+See [references/adding-tools.md](references/adding-tools.md).

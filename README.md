@@ -1,26 +1,40 @@
 # iskills
 
-An installable [Agent Skill](https://agentskills.io) with bundled Python
-tools. The repo root is the skill itself: `SKILL.md` defines it, `scripts/`
-holds the tools, and `references/` holds supporting docs the agent loads on
-demand.
+An installable [Agent Skill](https://agentskills.io) that turns API docs into
+a **skill tree**: a root `SKILL.md` with the API's core concepts, plus linked
+subskills for each task, so agents load only the part of the API they need.
 
-This is a scaffold — it ships one working example tool (`text_stats`) and the
-conventions for adding more.
+A Python CLI (`scripts/skilltree.py`) does the deterministic work (crawl the
+docs, draw the taxonomy, validate, install) and hands the judgment calls
+(planning the tree, writing each skill) to a CLI agent (`claude -p` by default).
 
 ## Structure
 
 ```
 iskills/
-├── SKILL.md                 # skill definition (frontmatter + tool docs)
+├── SKILL.md                 # the skill: how to run the pipeline
 ├── scripts/
-│   └── text_stats.py        # example tool: line/word/character counts
+│   └── skilltree.py         # CLI: map | plan | generate | check | install | build
 ├── references/
+│   ├── planning.md          # agent rules: docs taxonomy -> skill tree plan
+│   ├── writing.md           # agent rules: writing one SKILL.md
 │   └── adding-tools.md      # how to add and register new tools
-├── pyproject.toml           # uv project (for tools that need dependencies)
+├── examples/moonshine/      # worked example on the Moonshine Voice docs
+├── pyproject.toml           # uv project
 ├── LICENSE                  # AGPL-3.0 (code)
 └── CC-BY-SA-4.0             # CC BY-SA 4.0 (documentation/research)
 ```
+
+## Quick start
+
+```bash
+uv sync
+uv run scripts/skilltree.py build ../moonshine/docs/index.md -o build/moonshine
+uv run scripts/skilltree.py install build/moonshine/moonshine-voice --to ~/.claude/skills
+```
+
+Or step by step (`map`, `plan`, `generate`, `check`, `install`), reviewing the
+mermaid diagrams `taxonomy.md` and `plan.md` in between. See [SKILL.md](SKILL.md).
 
 ## Install
 
@@ -52,27 +66,11 @@ A symlink works too, so one checkout serves every agent:
 ln -s "$(pwd)" ~/.qwen/skills/iskills
 ```
 
-## Use the tools directly
-
-The example tool is standard-library-only (Python 3.10+):
-
-```bash
-python3 scripts/text_stats.py README.md SKILL.md
-cat notes.txt | python3 scripts/text_stats.py
-python3 scripts/text_stats.py --json README.md
-```
-
 ## Develop
 
-This is a [uv](https://docs.astral.sh/uv/) project. Tools with third-party
-dependencies are managed with `uv add <pkg>` and run with `uv run`:
-
-```bash
-uv sync
-uv run scripts/text_stats.py README.md
-```
-
-To add a new tool, follow [references/adding-tools.md](references/adding-tools.md).
+This is a [uv](https://docs.astral.sh/uv/) project: add dependencies with
+`uv add <pkg>`, run tools with `uv run scripts/<tool>.py`. To add a new tool,
+follow [references/adding-tools.md](references/adding-tools.md).
 
 ## License
 

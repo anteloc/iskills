@@ -1,0 +1,396 @@
+{
+  "docs_dir": "../../../moonshine/docs",
+  "source": "mkdocs nav (mkdocs.yml)",
+  "tree": {
+    "title": "Moonshine Voice",
+    "path": "index.md",
+    "lines": 16,
+    "headings": [
+      "# Moonshine Voice"
+    ],
+    "children": [
+      {
+        "title": "Quickstart",
+        "path": "quickstart.md",
+        "lines": 148,
+        "headings": [
+          "# Quickstart",
+          "## Coding agents"
+        ],
+        "children": []
+      },
+      {
+        "title": "Examples",
+        "path": "examples.md",
+        "lines": 78,
+        "headings": [
+          "# Examples"
+        ],
+        "children": []
+      },
+      {
+        "title": "Moonshine vs Whisper",
+        "path": "moonshine-vs-whisper.md",
+        "lines": 40,
+        "headings": [
+          "# When should you choose Moonshine over Whisper?"
+        ],
+        "children": []
+      },
+      {
+        "title": "Using the Library",
+        "path": null,
+        "children": [
+          {
+            "title": "Overview",
+            "path": "using/index.md",
+            "lines": 3,
+            "headings": [
+              "# Using the Library"
+            ],
+            "children": []
+          },
+          {
+            "title": "Transcription",
+            "path": "using/transcription.md",
+            "lines": 130,
+            "headings": [
+              "# Transcription",
+              "## Getting Started",
+              "## Advanced",
+              "## Transcription Event Flow"
+            ],
+            "children": []
+          },
+          {
+            "title": "Conversational Agent",
+            "path": "using/conversational-agent.md",
+            "lines": 194,
+            "headings": [
+              "# Getting Started with a Conversational Agent",
+              "## A Simple Flow",
+              "## Multi-step Flows",
+              "## Asking Questions",
+              "## Confirmations",
+              "## Spelled Input",
+              "## Error Handling",
+              "## Speaking a Reply as It Is Written",
+              "## Agent Setup"
+            ],
+            "children": []
+          },
+          {
+            "title": "Text to Speech",
+            "path": "using/text-to-speech.md",
+            "lines": 255,
+            "headings": [
+              "# Text to Speech",
+              "## Getting Started",
+              "## Streaming Text In",
+              "## Voice Cloning",
+              "## Voice Samples",
+              "### ZipVoice",
+              "### Phonon",
+              "### Kokoro",
+              "### Piper TTS",
+              "## Converting Graphemes to Phonemes"
+            ],
+            "children": []
+          },
+          {
+            "title": "Adding the Library",
+            "path": "using/adding-the-library.md",
+            "lines": 111,
+            "headings": [
+              "# Adding the Library to your own App"
+            ],
+            "children": []
+          },
+          {
+            "title": "Debugging",
+            "path": "using/debugging.md",
+            "lines": 27,
+            "headings": [
+              "# Debugging",
+              "## Console Logs",
+              "## Input Saving",
+              "## API Call Logging"
+            ],
+            "children": []
+          },
+          {
+            "title": "Building from Source",
+            "path": "using/building-from-source.md",
+            "lines": 50,
+            "headings": [
+              "# Building from Source",
+              "## Cmake",
+              "## Language Bindings",
+              "## Porting"
+            ],
+            "children": []
+          },
+          {
+            "title": "Downloading Models",
+            "path": "using/downloading-models.md",
+            "lines": 235,
+            "headings": [
+              "# Downloading Models",
+              "## Automatic Downloading",
+              "### Where files go",
+              "## Speech to Text Models",
+              "## Embedding Models",
+              "## Text to Speech Models"
+            ],
+            "children": []
+          },
+          {
+            "title": "Benchmarks",
+            "path": "using/benchmarks.md",
+            "lines": 81,
+            "headings": [
+              "# Benchmarks",
+              "## Whisper Comparisons"
+            ],
+            "children": []
+          }
+        ]
+      },
+      {
+        "title": "Models",
+        "path": null,
+        "children": [
+          {
+            "title": "Overview",
+            "path": "models/index.md",
+            "lines": 10,
+            "headings": [
+              "# Models"
+            ],
+            "children": []
+          },
+          {
+            "title": "Papers",
+            "path": "models/papers.md",
+            "lines": 8,
+            "headings": [
+              "# Papers"
+            ],
+            "children": []
+          },
+          {
+            "title": "Available Models",
+            "path": "models/available-models.md",
+            "lines": 70,
+            "headings": [
+              "# Available Models",
+              "## Current models",
+              "## Deprecated models"
+            ],
+            "children": []
+          },
+          {
+            "title": "Accuracy",
+            "path": "models/accuracy.md",
+            "lines": 148,
+            "headings": [
+              "# Accuracy (Word Error Rate)",
+              "## English (LibriSpeech)",
+              "## Other languages",
+              "## Reproducing these numbers",
+              "## Takeaways"
+            ],
+            "children": []
+          },
+          {
+            "title": "Domain Customization",
+            "path": "models/domain-customization.md",
+            "lines": 279,
+            "headings": [
+              "# Domain Customization",
+              "## Runtime Context",
+              "### Supply a Context",
+              "### Supply a Key Terms List",
+              "### How it works",
+              "### Tuning the strength",
+              "### Measuring it on your own data",
+              "### What a long list costs",
+              "### What it costs in time",
+              "### What it can't do",
+              "## Retraining",
+              "### Worked example: air traffic control",
+              "### Worked example: real VHF",
+              "### Your own data",
+              "### Shipping the result",
+              "### Pitfalls"
+            ],
+            "children": []
+          },
+          {
+            "title": "Quantization",
+            "path": "models/quantization.md",
+            "lines": 15,
+            "headings": [
+              "# Quantization"
+            ],
+            "children": []
+          },
+          {
+            "title": "HuggingFace",
+            "path": "models/huggingface.md",
+            "lines": 5,
+            "headings": [
+              "# HuggingFace"
+            ],
+            "children": []
+          }
+        ]
+      },
+      {
+        "title": "API Reference",
+        "path": null,
+        "children": [
+          {
+            "title": "Classes",
+            "path": "api/classes.md",
+            "lines": 457,
+            "headings": [
+              "# Classes",
+              "## Transcriber",
+              "## MicTranscriber",
+              "## Stream",
+              "## TranscriptEventListener",
+              "## AgentFlow",
+              "## Dialog",
+              "## TextToSpeech",
+              "## GraphemeToPhonemizer",
+              "## EmbeddingModel"
+            ],
+            "children": []
+          },
+          {
+            "title": "Options",
+            "path": "api/options.md",
+            "lines": 201,
+            "headings": [
+              "# Options",
+              "## Shared options",
+              "## Speech to Text",
+              "## Text to Speech",
+              "## Grapheme to Phonemes",
+              "### Roots and runtime",
+              "### Lexicon and model path overrides",
+              "### Language feature flags",
+              "## Embeddings",
+              "## Speech clip extract",
+              "## Download manifests",
+              "### Speech to Text (`moonshine_get_stt_dependencies()`)",
+              "### TTS / G2P dependency and voice listing"
+            ],
+            "children": []
+          },
+          {
+            "title": "C API",
+            "path": "api/c-api.md",
+            "lines": 1339,
+            "headings": [
+              "# C API",
+              "## Constants",
+              "### Version",
+              "### Model architectures",
+              "### Error codes",
+              "### Flags",
+              "## Data Structures",
+              "### `moonshine_option_t`",
+              "### `transcript_word_t`",
+              "### `speaker_span_t`",
+              "### `transcript_line_t`",
+              "### `transcript_t`",
+              "### `moonshine_speech_clip_t`",
+              "### TTS voice catalog entries",
+              "## Utilities",
+              "### `moonshine_get_version()`",
+              "### `moonshine_error_to_string()`",
+              "### `moonshine_free_buffer()`",
+              "### `moonshine_transcript_to_string()`",
+              "## Speech to Text",
+              "### `moonshine_load_transcriber_from_files()`",
+              "### `moonshine_load_transcriber_from_memory_files()`",
+              "### `moonshine_load_transcriber_from_memory()`",
+              "### `moonshine_free_transcriber()`",
+              "### `moonshine_transcriber_set_keyterms()`",
+              "### `moonshine_transcriber_set_context()`",
+              "### `moonshine_transcribe_without_streaming()`",
+              "## Streaming Speech to Text",
+              "### `moonshine_create_stream()`",
+              "### `moonshine_free_stream()`",
+              "### `moonshine_start_stream()`",
+              "### `moonshine_stop_stream()`",
+              "### `moonshine_transcribe_add_audio_to_stream()`",
+              "### `moonshine_transcribe_stream()`",
+              "## Embeddings",
+              "### `moonshine_create_embedding_model()`",
+              "### `moonshine_create_embedding_model_from_memory()`",
+              "### `moonshine_free_embedding_model()`",
+              "### `moonshine_calculate_embedding()`",
+              "### `moonshine_free_embedding()`",
+              "### `moonshine_calculate_embedding_distance()`",
+              "## Speech Clips",
+              "### `moonshine_extract_speech_clip()`",
+              "## Text to Speech",
+              "### `moonshine_create_tts_synthesizer_from_files()`",
+              "### `moonshine_create_tts_synthesizer_from_memory()`",
+              "### `moonshine_free_tts_synthesizer()`",
+              "### `moonshine_text_to_speech()`",
+              "### `moonshine_phonemes_to_speech()`",
+              "### Streaming synthesis",
+              "### `moonshine_tts_split_utterances()`",
+              "### `moonshine_get_tts_dependencies()`",
+              "### `moonshine_get_tts_voices()`",
+              "## Grapheme to Phonemes",
+              "### `moonshine_create_grapheme_to_phonemizer_from_files()`",
+              "### `moonshine_create_grapheme_to_phonemizer_from_memory()`",
+              "### `moonshine_free_grapheme_to_phonemizer()`",
+              "### `moonshine_text_to_phonemes()`",
+              "### `moonshine_get_g2p_dependencies()`",
+              "## Model Download Manifests",
+              "### `moonshine_get_stt_dependencies()`",
+              "### `moonshine_get_embedding_dependencies()`",
+              "### `moonshine_get_diarization_dependencies()`",
+              "### `moonshine_get_stt_catalog()`",
+              "### `moonshine_get_embedding_catalog()`"
+            ],
+            "children": []
+          }
+        ]
+      },
+      {
+        "title": "Support",
+        "path": "support.md",
+        "lines": 3,
+        "headings": [
+          "# Support"
+        ],
+        "children": []
+      },
+      {
+        "title": "Acknowledgements",
+        "path": "acknowledgements.md",
+        "lines": 25,
+        "headings": [
+          "# Acknowledgements"
+        ],
+        "children": []
+      },
+      {
+        "title": "License",
+        "path": "license.md",
+        "lines": 25,
+        "headings": [
+          "# License"
+        ],
+        "children": []
+      }
+    ]
+  }
+}

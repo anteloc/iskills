@@ -5,9 +5,9 @@
 1. Create `scripts/<tool_name>.py` (snake_case, executable via
    `python3 scripts/<tool_name>.py`).
 2. Follow the tool contract below.
-3. Register the tool in `SKILL.md` under `## Tools` with a short description
-   and at least one usage example — the agent only discovers tools that are
-   documented there.
+3. Document the tool in `SKILL.md` with a short description and at least
+   one usage example — the agent only discovers tools that are documented
+   there.
 4. If the tool needs third-party packages: `uv add <pkg>` from the repo root,
    then document running it with
    `uv run --directory <skill-dir> scripts/<tool_name>.py`.

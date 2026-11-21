@@ -1,0 +1,117 @@
+{
+  "docs_dir": "../../../moonshine/docs",
+  "skill": {
+    "name": "moonshine-voice",
+    "description": "Moonshine Voice is an on-device speech library for speech-to-text, text-to-speech and voice agents. This root skill covers the core concepts every task needs: what the library does, installing it, the quickstart for each language binding, the main usage pattern (load a model, create a Transcriber or MicTranscriber, listen for transcript events), and example apps. Use when starting any work with Moonshine Voice, when installing the package (for example pip install moonshine-voice), when looking for a minimal working example, or when unsure which Moonshine subskill fits a task.",
+    "sources": [
+      "index.md",
+      "quickstart.md",
+      "using/index.md",
+      "examples.md"
+    ],
+    "children": [
+      {
+        "name": "transcription",
+        "description": "Covers speech-to-text with Moonshine: transcribing files and live microphone audio, streaming audio into a Stream, and handling the transcript event flow (line started, updated, text changed, completed) through a TranscriptEventListener. Use when a task asks to transcribe audio, add live captions, build real-time speech recognition, or work with Transcriber, MicTranscriber, Stream, TranscriptEventListener, transcript lines and words, add_audio, start and stop, or transcribe_without_streaming.",
+        "sources": [
+          "using/transcription.md"
+        ],
+        "children": []
+      },
+      {
+        "name": "domain-customization",
+        "description": "Covers adapting Moonshine speech-to-text to a specific domain: supplying a runtime context or a key-terms list to bias recognition toward jargon, names and product terms, tuning the bias strength, measuring the gain on your own data, what long lists cost in accuracy and latency, and retraining or fine-tuning a model on your own data (worked air-traffic-control and VHF examples, shipping the result, pitfalls). Use when transcripts get domain words, names or acronyms wrong, or when a task mentions set_keyterms, set_context, moonshine_transcriber_set_keyterms, moonshine_transcriber_set_context, key terms, hotwords, vocabulary biasing or fine-tuning.",
+        "sources": [
+          "models/domain-customization.md"
+        ],
+        "children": []
+      },
+      {
+        "name": "voice-agent",
+        "description": "Covers building conversational voice agents with Moonshine: simple and multi-step flows, asking questions, confirmations, spelled input, error handling, speaking a reply while it is being written, and agent setup that ties transcription to text-to-speech. Use when a task asks for a voice assistant, voice-driven form, phone-style dialog, or spoken question and answer, or mentions AgentFlow, Dialog, confirmations, spelled input or streaming a reply to speech.",
+        "sources": [
+          "using/conversational-agent.md"
+        ],
+        "children": []
+      },
+      {
+        "name": "text-to-speech",
+        "description": "Covers speech synthesis with Moonshine: generating audio from text, streaming text in as it is produced, voice cloning, choosing among the voice families (ZipVoice, Phonon, Kokoro, Piper TTS) and converting graphemes to phonemes. Use when a task asks to speak text aloud, synthesize speech, pick or clone a voice, stream LLM output to audio, or work with phonemes, or when it mentions TextToSpeech, GraphemeToPhonemizer, moonshine_text_to_speech, moonshine_phonemes_to_speech, moonshine_get_tts_voices or G2P.",
+        "sources": [
+          "using/text-to-speech.md"
+        ],
+        "children": []
+      },
+      {
+        "name": "model-selection",
+        "description": "Covers choosing a Moonshine model: the current and deprecated speech-to-text models with their sizes and languages, word error rate accuracy on LibriSpeech and other languages, speed and accuracy benchmarks with Whisper comparisons, quantized variants, and where the models are published on HuggingFace. Use when a task asks which model size or language model to use, how accurate or fast Moonshine is, how to trade latency for accuracy, whether to use a quantized model, or where to find the models on HuggingFace.",
+        "sources": [
+          "models/index.md",
+          "models/available-models.md",
+          "models/accuracy.md",
+          "using/benchmarks.md",
+          "models/quantization.md",
+          "models/huggingface.md"
+        ],
+        "children": []
+      },
+      {
+        "name": "model-downloads",
+        "description": "Covers getting model files onto a device: automatic downloading and where files go (cache location), the speech-to-text, embedding and text-to-speech model downloads, and the download manifests that list the files each feature needs. Use when models fail to load or download, when bundling models for offline use or app distribution, when changing the model cache directory, or when a task mentions moonshine_get_stt_dependencies, moonshine_get_tts_dependencies, moonshine_get_embedding_dependencies, moonshine_get_stt_catalog or model paths.",
+        "sources": [
+          "using/downloading-models.md",
+          "api/options.md"
+        ],
+        "children": []
+      },
+      {
+        "name": "app-integration",
+        "description": "Covers adding Moonshine Voice to your own app and building it from source: linking the library into iOS, Android, desktop and other projects, building with CMake, generating the language bindings and porting to new platforms. Use when a task asks to embed Moonshine in an existing project, set up a build, compile the C++ core, use CMake, create or fix language bindings, or port Moonshine to a new platform.",
+        "sources": [
+          "using/adding-the-library.md",
+          "using/building-from-source.md"
+        ],
+        "children": []
+      },
+      {
+        "name": "debugging",
+        "description": "Covers troubleshooting Moonshine Voice: enabling console logs, saving the input audio the library receives, and logging API calls to reproduce problems. Use when transcription or synthesis behaves unexpectedly, produces no output or wrong output, when audio input looks wrong, or when a task asks how to turn on logging, save input audio or trace API calls.",
+        "sources": [
+          "using/debugging.md"
+        ],
+        "children": []
+      },
+      {
+        "name": "reference",
+        "description": "API reference for Moonshine Voice: the high-level classes, every option accepted by the speech-to-text, text-to-speech, grapheme-to-phoneme and embedding components, and the full C API. Use when a task needs an exact signature, class member, option name, default value, constant, error code or C function rather than a how-to guide.",
+        "sources": [],
+        "children": [
+          {
+            "name": "classes",
+            "description": "Reference for the high-level Moonshine classes and their methods and events: Transcriber, MicTranscriber, Stream, TranscriptEventListener, AgentFlow, Dialog, TextToSpeech, GraphemeToPhonemizer and EmbeddingModel. Use when a task needs the exact constructor arguments, methods, callbacks or properties of one of these classes, or when computing speaker or speech embeddings with EmbeddingModel.",
+            "sources": [
+              "api/classes.md"
+            ],
+            "children": []
+          },
+          {
+            "name": "options",
+            "description": "Reference for the option names and values Moonshine accepts: shared options, speech-to-text options, text-to-speech options, grapheme-to-phoneme roots, runtime, lexicon and model path overrides and language feature flags, embedding options, speech clip extraction options, and the download manifest functions. Use when a task needs to set, look up or validate a specific option passed as moonshine_option_t or as keyword options in a binding.",
+            "sources": [
+              "api/options.md"
+            ],
+            "children": []
+          },
+          {
+            "name": "c-api",
+            "description": "Reference for the Moonshine C API: constants (version, model architectures, error codes, flags), data structures (moonshine_option_t, transcript_word_t, speaker_span_t, transcript_line_t, transcript_t, moonshine_speech_clip_t), utilities, transcriber loading and streaming (moonshine_load_transcriber_from_files, moonshine_create_stream, moonshine_transcribe_add_audio_to_stream, moonshine_transcribe_stream), embeddings (moonshine_calculate_embedding, moonshine_calculate_embedding_distance), speech clips, text to speech (moonshine_create_tts_synthesizer_from_files, moonshine_text_to_speech, moonshine_tts_split_utterances), grapheme to phonemes and model download manifests. Use when writing C or C++ code or new bindings against Moonshine, or when checking ownership and freeing rules (moonshine_free_buffer, moonshine_free_transcriber).",
+            "sources": [
+              "api/c-api.md"
+            ],
+            "children": []
+          }
+        ]
+      }
+    ]
+  }
+}
