@@ -19,6 +19,7 @@ set -eu
 
 REPO="${ISKILLZ_REPO:-anteloc/iskillz}"
 REF="${ISKILLZ_REF:-master}"
+SKILL_DIR="skills/iskillz"
 FILES="SKILL.md scripts references LICENSE CC-BY-SA-4.0"
 AGENT_DIRS=".claude .agents .qwen .codex .gemini .opencode"
 MARKER=".iskillz-install"
@@ -49,7 +50,7 @@ target=$(cd "$target" && pwd)
 src=""
 case "$0" in
   *install.sh)
-    here=$(cd "$(dirname "$0")" && pwd)
+    here=$(cd "$(dirname "$0")" && pwd)/$SKILL_DIR
     [ -f "$here/SKILL.md" ] && [ -f "$here/scripts/skilltree.py" ] && src=$here ;;
 esac
 if [ -z "$src" ]; then
@@ -59,8 +60,8 @@ if [ -z "$src" ]; then
   curl -fsSL -o "$tmp/src.tar.gz" "https://github.com/$REPO/archive/$REF.tar.gz" 2>/dev/null \
     || die "could not download $REPO at $REF (no such branch, tag or commit?)"
   tar -xzf "$tmp/src.tar.gz" -C "$tmp" && rm "$tmp/src.tar.gz"
-  src=$(find "$tmp" -mindepth 1 -maxdepth 1 -type d | head -n 1)
-  [ -f "$src/SKILL.md" ] || die "$REPO at $REF has no SKILL.md"
+  src=$(find "$tmp" -mindepth 1 -maxdepth 1 -type d | head -n 1)/$SKILL_DIR
+  [ -f "$src/SKILL.md" ] || die "$REPO at $REF has no $SKILL_DIR/SKILL.md"
   version=$REF
 else
   version="local checkout $src"

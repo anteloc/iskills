@@ -180,17 +180,20 @@ you are working in.
 
 ```
 iskillz/
-├── SKILL.md                 # the skill: how to run the pipeline
+├── skills/iskillz/          # the skill itself: all that gets installed
+│   ├── SKILL.md             # how to run the pipeline
+│   ├── scripts/
+│   │   ├── skilltree.py     # fetch | map | plan | generate | check | package | install | build
+│   │   ├── docsource.py     # fetch: local / git / website docs -> markdown (pandoc)
+│   │   ├── bootstrap.py     # first run: installs requirements.txt into a private virtualenv
+│   │   └── requirements.txt # runtime Python packages
+│   ├── references/
+│   │   ├── planning.md      # agent rules: docs taxonomy -> skill tree plan
+│   │   ├── writing.md       # agent rules: writing one SKILL.md
+│   │   └── adding-tools.md  # how to add and register new tools
+│   ├── LICENSE              # copy of the root license, shipped with the skill
+│   └── CC-BY-SA-4.0         # copy of the root license, shipped with the skill
 ├── install.sh               # one-line installer into a project
-├── scripts/
-│   ├── skilltree.py         # fetch | map | plan | generate | check | package | install | build
-│   ├── docsource.py         # fetch: local / git / website docs -> markdown (pandoc)
-│   ├── bootstrap.py         # first run: installs requirements.txt into a private virtualenv
-│   └── requirements.txt     # runtime Python packages
-├── references/
-│   ├── planning.md          # agent rules: docs taxonomy -> skill tree plan
-│   ├── writing.md           # agent rules: writing one SKILL.md
-│   └── adding-tools.md      # how to add and register new tools
 ├── examples/moonshine/      # worked example on the Moonshine Voice docs
 ├── pyproject.toml           # dev environment (optional, uv)
 ├── LICENSE                  # AGPL-3.0 (code)
@@ -199,11 +202,16 @@ iskillz/
 
 ## Develop
 
-Run the scripts with `python3 scripts/skilltree.py ...`: no setup needed.
-Runtime packages are listed in `scripts/requirements.txt`; `pyproject.toml`
+Run the scripts with `python3 skills/iskillz/scripts/skilltree.py ...`: no
+setup needed. Runtime packages are listed in
+`skills/iskillz/scripts/requirements.txt`; `pyproject.toml` (repo root)
 mirrors them for an optional [uv](https://docs.astral.sh/uv/) dev environment
 (`uv sync`). To add a new tool, follow
-[references/adding-tools.md](references/adding-tools.md).
+[skills/iskillz/references/adding-tools.md](skills/iskillz/references/adding-tools.md).
+
+Everything an installed skill needs lives under `skills/iskillz/`: both
+installers copy only that folder. If you edit `LICENSE` or `CC-BY-SA-4.0` at
+the root, update the copies there too.
 
 ## License
 

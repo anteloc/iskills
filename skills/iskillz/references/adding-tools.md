@@ -17,7 +17,8 @@ tool beyond Python.
    agent only discovers tools that are documented there.
 4. Third-party packages: add them to `scripts/requirements.txt` (what users
    get) and to `MODULES` in `scripts/bootstrap.py` (the import names it checks
-   for), and to `pyproject.toml` for the dev environment. Prefer a ready-made
+   for), and to `pyproject.toml` (repo root, not shipped with the skill) for the dev
+   environment. Prefer a ready-made
    package over ad-hoc code.
 5. Test it (see below) before committing.
 
