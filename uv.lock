@@ -30,7 +30,7 @@ wheels = [
 ]
 
 [[package]]
-name = "iskills"
+name = "iskillz"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

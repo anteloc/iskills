@@ -6,8 +6,8 @@ the standard `python -m venv`, installs requirements.txt into it with pip,
 and re-runs the script with that virtualenv's Python. Later runs reuse it;
 it is rebuilt when requirements.txt changes.
 
-The virtualenv lives in $ISKILLS_VENV, default ~/.cache/iskills/venv
-(or $XDG_CACHE_HOME/iskills/venv).
+The virtualenv lives in $ISKILLZ_VENV, default ~/.cache/iskillz/venv
+(or $XDG_CACHE_HOME/iskillz/venv).
 """
 
 import importlib.util
@@ -22,10 +22,10 @@ MODULES = ("yaml", "markdown_it", "skills_ref", "bs4", "pypandoc")
 
 
 def venv_dir() -> Path:
-    if env := os.environ.get("ISKILLS_VENV"):
+    if env := os.environ.get("ISKILLZ_VENV"):
         return Path(env).expanduser()
     cache = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache")
-    return cache / "iskills" / "venv"
+    return cache / "iskillz" / "venv"
 
 
 def fail(msg: str) -> None:
@@ -39,7 +39,7 @@ def ensure() -> None:
              f"(this is {sys.version.split()[0]})")
     if all(importlib.util.find_spec(m) for m in MODULES):
         return
-    if os.environ.get("ISKILLS_BOOTSTRAPPED"):
+    if os.environ.get("ISKILLZ_BOOTSTRAPPED"):
         fail(f"dependencies still missing in {sys.prefix}; delete it and retry")
 
     venv = venv_dir()
@@ -61,7 +61,7 @@ def ensure() -> None:
             fail(f"pip could not install {REQUIREMENTS} (offline?)")
         stamp.write_text(wanted)
 
-    env = os.environ | {"ISKILLS_BOOTSTRAPPED": "1"}
+    env = os.environ | {"ISKILLZ_BOOTSTRAPPED": "1"}
     args = [str(python), os.path.abspath(sys.argv[0]), *sys.argv[1:]]
     if os.name == "nt":  # no real exec on Windows
         sys.exit(subprocess.run(args, env=env).returncode)

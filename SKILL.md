@@ -1,5 +1,5 @@
 ---
-name: iskills
+name: iskillz
 license: AGPL-3.0
 description: >
   Turn API docs (markdown, e.g. a mkdocs site, from a git repo or a local
@@ -13,7 +13,7 @@ description: >
   into that project.
 ---
 
-# iskills: API docs → skill tree
+# iskillz: API docs → skill tree
 
 Large API docsets bloat an agent's context and mix concerns. This skill
 turns a docs tree into a **skill tree** that agents navigate like a person
@@ -21,7 +21,7 @@ navigates the docs: start at the root, open only the subskill for the task.
 
 Run the script with Python 3.11+ (`python` instead of `python3` on
 Windows). Nothing to install first: on its first run it installs its own
-dependencies into a private virtualenv (`~/.cache/iskills/venv`, about a
+dependencies into a private virtualenv (`~/.cache/iskillz/venv`, about a
 minute), then reuses it:
 
 ```bash
@@ -64,11 +64,11 @@ the task needs an API that has no skill yet.
    Pick the version the project uses: a tag (`--ref v1.2.3`, or in the
    URL) for a repo, the matching version path (`/en/1.2.3/`) for a site.
 4. **Build and install.** Keep the workspace out of the project
-   (`~/.cache/iskills/<api>`), and install into the project:
+   (`~/.cache/iskillz/<api>`), and install into the project:
 
    ```bash
    python3 <skill-dir>/scripts/skilltree.py build <source> \
-       -o ~/.cache/iskills/<api> --project <project-dir>
+       -o ~/.cache/iskillz/<api> --project <project-dir>
    ```
 
    **You** do the planning and writing: run it without `--agent`. It does
@@ -229,7 +229,7 @@ so whoever runs it chooses, and knows, which agent writes the skill.
 Subskills are plain SKILL.md files in subdirectories, linked from their
 parent. Agents discover only the root skill and follow the links on demand.
 
-Worked example: [examples/moonshine/](https://github.com/anteloc/iskills/tree/master/examples/moonshine) (Moonshine Voice).
+Worked example: [examples/moonshine/](https://github.com/anteloc/iskillz/tree/master/examples/moonshine) (Moonshine Voice).
 
 ## Adding tools
 

@@ -1,4 +1,4 @@
-# iskills
+# iskillz
 
 An installable [Agent Skill](https://agentskills.io) that turns API docs into
 a **skill tree**: a root `SKILL.md` with the API's core concepts, plus linked
@@ -18,7 +18,7 @@ Every method needs these on your machine (check with `python3 --version` and
 `git --version`):
 
 - [Python 3.11+](https://www.python.org/downloads/). The skill installs its
-  own Python packages into a private virtualenv (`~/.cache/iskills/venv`) the
+  own Python packages into a private virtualenv (`~/.cache/iskillz/venv`) the
   first time it runs. Nothing else to install.
 - [git](https://git-scm.com/downloads), to fetch docs from repositories.
 - An agent that uses skills (Claude Code, Qwen Code, Codex, ...). It is
@@ -32,7 +32,7 @@ Needs `curl` (preinstalled on macOS and most Linux). From the root of your
 project:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/anteloc/iskills/master/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/anteloc/iskillz/master/install.sh | sh
 ```
 
 It copies the skill into each agent directory the project has (`.claude/`,
@@ -41,7 +41,7 @@ there is none, and sets up its Python packages. Run it again to update. To
 pick the agent directory, e.g. Qwen Code:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/anteloc/iskills/master/install.sh | sh -s -- --agent qwen
+curl -fsSL https://raw.githubusercontent.com/anteloc/iskillz/master/install.sh | sh -s -- --agent qwen
 ```
 
 #### Usage
@@ -50,12 +50,12 @@ Start Claude Code in your project (a new session, so it loads the skill)
 and give it a prompt that names the API and, if you know it, where its docs
 are. For example, in a robotics project:
 
-> We're going to simulate our robot arm with MuJoCo. Use iskills to make a
+> We're going to simulate our robot arm with MuJoCo. Use iskillz to make a
 > skill for the MuJoCo API from https://mujoco.readthedocs.io/en/stable/overview.html
 > and install it in this project.
 
-The agent fetches the docs, builds the skill tree in `~/.cache/iskills/mujoco`,
-installs it next to iskills (e.g. `.claude/skills/mujoco/`) and reads it before
+The agent fetches the docs, builds the skill tree in `~/.cache/iskillz/mujoco`,
+installs it next to iskillz (e.g. `.claude/skills/mujoco/`) and reads it before
 carrying on. It takes a few minutes. Commit the new skill folder to share it
 with your team.
 
@@ -72,7 +72,7 @@ it has no skill for, and it offers to build one first:
 Needs `curl`. From any directory:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/anteloc/iskills/master/install.sh | sh -s -- --global
+curl -fsSL https://raw.githubusercontent.com/anteloc/iskillz/master/install.sh | sh -s -- --global
 ```
 
 It installs into your personal skill directories (`~/.claude/skills/`, ...),
@@ -83,7 +83,7 @@ so every project sees the skill.
 Same as Method 1, in any project. The generated API skills are still
 installed into the project you are working in, not globally:
 
-> We're going to simulate our robot arm with MuJoCo. Use iskills to make a
+> We're going to simulate our robot arm with MuJoCo. Use iskillz to make a
 > skill for the MuJoCo API from https://mujoco.readthedocs.io/en/stable/overview.html
 > and install it in this project.
 
@@ -95,7 +95,7 @@ Needs [Node.js](https://nodejs.org/) (for `npx`). From the root of your
 project:
 
 ```sh
-npx skills add anteloc/iskills
+npx skills add anteloc/iskillz
 ```
 
 Follow its prompts to choose the agents to install for.
@@ -104,7 +104,7 @@ Follow its prompts to choose the agents to install for.
 
 Same as Method 1: start a new agent session and give it a prompt, e.g.:
 
-> Use iskills to make a skill for the Click API from
+> Use iskillz to make a skill for the Click API from
 > https://github.com/pallets/click/tree/main/docs and install it in this project.
 
 ### Method 4: git clone
@@ -114,23 +114,23 @@ Same as Method 1: start a new agent session and give it a prompt, e.g.:
 From the root of your project (Claude Code):
 
 ```sh
-git clone --depth 1 https://github.com/anteloc/iskills .claude/skills/iskills
+git clone --depth 1 https://github.com/anteloc/iskillz .claude/skills/iskillz
 ```
 
 Or for all your projects:
 
 ```sh
-git clone --depth 1 https://github.com/anteloc/iskills ~/.claude/skills/iskills
+git clone --depth 1 https://github.com/anteloc/iskillz ~/.claude/skills/iskillz
 ```
 
 For other agents, replace `.claude` with `.agents`, `.qwen`, ... Update with
-`git -C .claude/skills/iskills pull`.
+`git -C .claude/skills/iskillz pull`.
 
 #### Usage
 
 Same as Method 1: start a new agent session and give it a prompt, e.g.:
 
-> Use iskills to make a skill for the MuJoCo API from
+> Use iskillz to make a skill for the MuJoCo API from
 > https://github.com/google-deepmind/mujoco/blob/main/doc/index.rst
 > and install it in this project.
 
@@ -156,7 +156,7 @@ npm install -g @anthropic-ai/claude-code
 Then get the scripts anywhere on your machine:
 
 ```sh
-git clone --depth 1 https://github.com/anteloc/iskills ~/iskills
+git clone --depth 1 https://github.com/anteloc/iskillz ~/iskillz
 ```
 
 #### Usage
@@ -165,14 +165,14 @@ Build a skill tree from any docs source (a website, a GitHub folder or
 file, or a local folder) and install it into a project:
 
 ```sh
-python3 ~/iskills/scripts/skilltree.py build https://mujoco.readthedocs.io/en/stable/overview.html -o ~/.cache/iskills/mujoco --agent "claude -p" --project /path/to/your/project
+python3 ~/iskillz/scripts/skilltree.py build https://mujoco.readthedocs.io/en/stable/overview.html -o ~/.cache/iskillz/mujoco --agent "claude -p" --project /path/to/your/project
 ```
 
 Or install it for all your projects with `--to ~/.claude/skills` instead of
 `--project`. The first run sets up the Python packages (about a minute), and
 the agent steps take a few minutes more. Without `--agent`, `build` stops and
-lists prompt files under `~/.cache/iskills/mujoco/prompts/` for you (or any
-agent) to answer in `~/.cache/iskills/mujoco/answers/`; running `build` again
+lists prompt files under `~/.cache/iskillz/mujoco/prompts/` for you (or any
+agent) to answer in `~/.cache/iskillz/mujoco/answers/`; running `build` again
 picks the answers up. To review each step (the mermaid diagrams `taxonomy.md`
 and `plan.md` in the workspace), run `fetch`, `map`, `plan`, `generate`,
 `check` and `install` one by one. See [SKILL.md](SKILL.md).
@@ -181,10 +181,10 @@ Package a built skill as a zip, to share or upload where skills are accepted.
 Pass the `skill:` path that `build` printed (its name comes from the plan):
 
 ```sh
-python3 ~/iskills/scripts/skilltree.py package ~/.cache/iskills/mujoco/<skill-name>
+python3 ~/iskillz/scripts/skilltree.py package ~/.cache/iskillz/mujoco/<skill-name>
 ```
 
-Run `python3 ~/iskills/scripts/skilltree.py <command> --help` for every option.
+Run `python3 ~/iskillz/scripts/skilltree.py <command> --help` for every option.
 
 ### Installer options
 
@@ -196,12 +196,12 @@ For Methods 1 and 2, pass them after `sh -s --`:
 | `--global` | install into your personal skill directories |
 | `--agent NAME` | agent directory: `claude`, `agents`, `qwen`, `codex`, `gemini`, `opencode` (repeatable) |
 | `--ref REF` | install a branch, tag or commit (default: `master`) |
-| `--force` | replace an `iskills/` folder the installer did not create |
+| `--force` | replace an `iskillz/` folder the installer did not create |
 
 ## Structure
 
 ```
-iskills/
+iskillz/
 ├── SKILL.md                 # the skill: how to run the pipeline
 ├── install.sh               # one-line installer into a project
 ├── scripts/

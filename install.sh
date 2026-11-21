@@ -1,8 +1,8 @@
 #!/bin/sh
-# Install the iskills skill into a project, for every agent it uses.
+# Install the iskillz skill into a project, for every agent it uses.
 #
 #   cd my-project
-#   curl -fsSL https://raw.githubusercontent.com/anteloc/iskills/master/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/anteloc/iskillz/master/install.sh | sh
 #
 # Options (after `sh -s --` when piped, e.g. `| sh -s -- --global`):
 #   [DIR]          project to install into (default: the current directory)
@@ -11,20 +11,20 @@
 #                  opencode (repeatable; default: every one the project has,
 #                  else .claude)
 #   --ref REF      branch, tag or commit to install (default: master)
-#   --force        replace an existing iskills folder not installed by this script
+#   --force        replace an existing iskillz folder not installed by this script
 #
 # Run again to update. From a local checkout, `./install.sh DIR` installs that
 # checkout instead of downloading.
 set -eu
 
-REPO="${ISKILLS_REPO:-anteloc/iskills}"
-REF="${ISKILLS_REF:-master}"
+REPO="${ISKILLZ_REPO:-anteloc/iskillz}"
+REF="${ISKILLZ_REF:-master}"
 FILES="SKILL.md scripts references LICENSE CC-BY-SA-4.0"
 AGENT_DIRS=".claude .agents .qwen .codex .gemini .opencode"
-MARKER=".iskills-install"
+MARKER=".iskillz-install"
 
 say() { printf '%s\n' "$*"; }
-die() { printf 'iskills install: %s\n' "$*" >&2; exit 1; }
+die() { printf 'iskillz install: %s\n' "$*" >&2; exit 1; }
 
 target=. global=0 agents="" force=0
 while [ $# -gt 0 ]; do
@@ -53,7 +53,7 @@ case "$0" in
     [ -f "$here/SKILL.md" ] && [ -f "$here/scripts/skilltree.py" ] && src=$here ;;
 esac
 if [ -z "$src" ]; then
-  command -v curl >/dev/null || die "curl is needed to download iskills"
+  command -v curl >/dev/null || die "curl is needed to download iskillz"
   tmp=$(mktemp -d)
   trap 'rm -rf "$tmp"' EXIT
   curl -fsSL -o "$tmp/src.tar.gz" "https://github.com/$REPO/archive/$REF.tar.gz" 2>/dev/null \
@@ -73,7 +73,7 @@ fi
 [ -n "$agents" ] || agents=".claude"
 
 for d in $agents; do
-  dest="$target/$d/skills/iskills"
+  dest="$target/$d/skills/iskillz"
   if [ -e "$dest" ] && [ ! -f "$dest/$MARKER" ] && [ "$force" != 1 ]; then
     die "$dest exists and was not installed by this script (use --force to replace it)"
   fi

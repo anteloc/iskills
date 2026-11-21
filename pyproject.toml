@@ -1,5 +1,5 @@
 [project]
-name = "iskills"
+name = "iskillz"
 version = "0.1.0"
 description = "Turn API docs into installable agent skill trees"
 readme = "README.md"
