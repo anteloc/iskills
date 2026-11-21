@@ -1,16 +1,73 @@
 # iskillz
 
-An installable [Agent Skill](https://agentskills.io) that turns API docs into
-a **skill tree**: a root `SKILL.md` with the API's core concepts, plus linked
-subskills for each task, so agents load only the part of the API they need.
+**Turn API docs into API skills.**
 
-A Python script (`scripts/skilltree.py`) does the mechanical work: fetch the
-docs (from a folder, a git repo or a website), map them, validate, package and
-install. The judgment calls (planning the tree, writing each skill) are done
-by the agent using the skill, in your session: the script hands it each task
-as a prompt file and assembles its answers. When you run the script yourself
-on the command line, you name the agent that does them, e.g.
-`--agent "claude -p"`.
+iskillz is an [Agent Skill](https://agentskills.io) that makes new skills.
+Point your agent at an API's docs index, and iskillz turns them into an
+**API skill**: a new skill your agent loads whenever it works with that API,
+e.g. to:
+
+- write code that calls it
+- answer questions about it
+- fix errors it throws
+
+It works with APIs such as:
+
+- libraries and frameworks, e.g. [Click](https://click.palletsprojects.com/) for Python
+- SDKs, e.g. Moonshine Voice (see [examples/moonshine/](examples/moonshine/))
+- engines with APIs in several languages, e.g. [MuJoCo](https://mujoco.org/) (C and Python)
+
+| | What it is |
+| --- | --- |
+| **iskillz** | This skill. It will enable your agents to make new API skills. |
+| **API docs** | The input: an API's documentation, starting at its index page (`.md`, `.rst` or `.html`), from a website, a git repo or a local folder. |
+| **API skill** | The output: a new skill for that API, installed in your project. |
+
+## From API docs to API skill
+
+An example with a made-up *Acme Weather* API.
+
+**Input: API docs** (the root index can be `index.md`, `index.rst` or `index.html`)
+
+```mermaid
+graph TD
+  index["index.md"] --> quickstart["quickstart.md"]
+  index --> forecasts["forecasts.md"]
+  index --> reference["reference.md"]
+  reference --> errors["errors.md"]
+```
+
+**Prompt** (to your agent)
+
+> Use iskillz to make an API skill for the Acme Weather API from
+> https://docs.example.com/acme-weather/index.md and install it in this project.
+
+**Output: API skill**
+
+```mermaid
+graph TD
+  root["acme-weather/SKILL.md<br/><i>agents start here</i>"] --> setup["setup/SKILL.md"]
+  root --> forecasts["forecasts/SKILL.md"]
+  root --> reference["reference/SKILL.md"]
+  reference --> errors["errors/SKILL.md"]
+```
+
+## How it works
+
+1. Install iskillz in your project, or globally.
+2. Ask your agent to create a new API skill for an API, and give it the API
+   docs' entry point, e.g. a GitHub URL.
+3. Your agent uses iskillz to fetch the docs and turn them into a new API
+   skill, tailored to that API, then installs it in your project (e.g.
+   `.claude/skills/acme-weather/`). It takes a few minutes.
+
+## Where to use it
+
+| Where | How |
+| --- | --- |
+| Agent session in a terminal (Claude Code, Qwen Code, Codex, ...) | Ask in plain words (Methods 1–4) |
+| Agent in your editor (e.g. Claude Code in VS Code or JetBrains) | Same: ask in the chat panel (Methods 1–4) |
+| Plain terminal, no agent session | Run the script yourself (Method 5) |
 
 ## Installation & Usage
 
@@ -22,7 +79,7 @@ Every method needs these on your machine (check with `python3 --version` and
   first time it runs. Nothing else to install.
 - [git](https://git-scm.com/downloads), to fetch docs from repositories.
 - An agent that uses skills (Claude Code, Qwen Code, Codex, ...). It is
-  the one that plans and writes the generated skills.
+  the one that writes the API skills.
 
 ### Method 1: installer, into one project (recommended)
 
@@ -35,10 +92,11 @@ project:
 curl -fsSL https://raw.githubusercontent.com/anteloc/iskillz/master/install.sh | sh
 ```
 
-It copies the skill into each agent directory the project has (`.claude/`,
-`.agents/`, `.qwen/`, `.codex/`, `.gemini/`, `.opencode/`), or `.claude/` if
-there is none, and sets up its Python packages. Run it again to update. To
-pick the agent directory, e.g. Qwen Code:
+It copies the skill into each agent directory the project has (`.agents/`,
+`.claude/`, `.codex/`, ...), or `.claude/` if there is none. It also sets up
+its Python packages. Run it again to update.
+
+To pick the agent directory, e.g. Qwen Code:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/anteloc/iskillz/master/install.sh | sh -s -- --agent qwen
@@ -54,9 +112,9 @@ are. For example, in a robotics project:
 > skill for the MuJoCo API from https://mujoco.readthedocs.io/en/stable/overview.html
 > and install it in this project.
 
-The agent fetches the docs, builds the skill tree in `~/.cache/iskillz/mujoco`,
+The agent fetches the docs, builds the API skill in `~/.cache/iskillz/mujoco`,
 installs it next to iskillz (e.g. `.claude/skills/mujoco/`) and reads it before
-carrying on. It takes a few minutes. Commit the new skill folder to share it
+carrying on. It takes a few minutes. Commit the API skill folder to share it
 with your team.
 
 It also works without asking for it by name. Give it a task that needs an API
@@ -139,8 +197,8 @@ packages.
 
 ### Method 5: command line, without an agent session
 
-Run the pipeline yourself, e.g. to build a skill once and share it. You pick
-the agent that plans and writes the skills with `--agent`: any command that
+Run the pipeline yourself, e.g. to build an API skill once and share it. You pick
+the agent that writes the API skill with `--agent`: any command that
 reads a prompt on stdin and prints the answer. The examples use Claude Code
 (`claude -p`).
 
@@ -161,7 +219,7 @@ git clone --depth 1 https://github.com/anteloc/iskillz ~/iskillz
 
 #### Usage
 
-Build a skill tree from any docs source (a website, a GitHub folder or
+Build an API skill from any docs source (a website, a GitHub folder or
 file, or a local folder) and install it into a project:
 
 ```sh
@@ -177,7 +235,7 @@ picks the answers up. To review each step (the mermaid diagrams `taxonomy.md`
 and `plan.md` in the workspace), run `fetch`, `map`, `plan`, `generate`,
 `check` and `install` one by one. See [SKILL.md](SKILL.md).
 
-Package a built skill as a zip, to share or upload where skills are accepted.
+Package an API skill as a zip, to share or upload where skills are accepted.
 Pass the `skill:` path that `build` printed (its name comes from the plan):
 
 ```sh
