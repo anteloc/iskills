@@ -201,8 +201,14 @@ iskillz/
 │   ├── LICENSE              # copy of the root license, shipped with the skill
 │   └── CC-BY-SA-4.0         # copy of the root license, shipped with the skill
 ├── install.sh               # one-line installer into a project
+├── examples/ldraw-nova/     # worked example on the ldraw-nova toolkit docs
+├── examples/ldraw-xray/     # worked example on the ldraw-xray CLI docs
 ├── examples/moonshine/      # worked example on the Moonshine Voice docs
+├── examples/mujoco/         # worked example on the MuJoCo docs
+├── examples/pyldraw3/       # worked example on the pyldraw3 docs
+├── examples/typesafe-jev/   # worked example on the TypeSafe Jev API docs
 ├── pyproject.toml           # dev environment (optional, uv)
+├── uv.lock                  # lockfile for the dev environment (uv)
 ├── LICENSE                  # AGPL-3.0 (code)
 └── CC-BY-SA-4.0             # CC BY-SA 4.0 (documentation/research)
 ```
