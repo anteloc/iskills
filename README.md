@@ -65,13 +65,26 @@ The flow **iskillz** imposes on your agent:
 
 ```mermaid
 graph TD
-  docs["API docs<br/><i>website, git repo or local folder</i>"] --> fetch["fetch <i>(script)</i><br/>docs → markdown"]
-  fetch --> map["map <i>(script)</i><br/>crawl the docs → taxonomy"]
-  map --> plan["plan <i>(your agent)</i><br/>taxonomy → skill tree plan"]
-  plan --> generate["generate <i>(your agent)</i><br/>write one SKILL.md per node,<br/>from its source docs"]
-  generate --> check["check <i>(script)</i><br/>validate the skill tree"]
-  check --> install["install <i>(script)</i><br/>into your project's skills directory"]
-  install --> use["your agent reads the new API skill<br/>and carries on with your task"]
+  docs["API docs<br/><i>website, git repo or local folder</i>"]
+  subgraph t1["Tooling (skilltree.py)"]
+    direction LR
+    fetch["fetch<br/>docs → markdown"] --> map["map<br/>crawl the docs → taxonomy"]
+  end
+  subgraph a1["Your agent"]
+    direction LR
+    plan["plan<br/>taxonomy → skill tree plan"] --> generate["generate<br/>write one SKILL.md per node,<br/>from its source docs"]
+  end
+  subgraph t2["Tooling (skilltree.py)"]
+    direction LR
+    check["check<br/>validate the skill tree"] --> install["install<br/>into your project's skills directory"]
+  end
+  subgraph a2["Your agent"]
+    use["read the new API skill,<br/>carry on with your task"]
+  end
+  docs --> t1
+  t1 --> a1
+  a1 --> t2
+  t2 --> a2
 ```
 
 ## Where to use it
