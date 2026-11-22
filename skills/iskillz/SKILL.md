@@ -172,6 +172,13 @@ You (or the `--agent`, `-j` in parallel, default 4) write each node's body
 following [references/writing.md](references/writing.md), from that node's
 source docs: one prompt per node in `<out>/prompts/<skill>/.../<node>.md`,
 answers in `<out>/answers/` at the same paths.
+
+**Mandatory:** the root SKILL.md of every generated API skill must include
+the **Coding Golden Rules (MANDATORY)** section, verbatim, so agents using
+that skill write better code. Its exact text is in
+[references/writing.md](references/writing.md), which every generate prompt
+includes. Subskills inherit it from the root: do not repeat it there.
+
 The script adds the frontmatter, a linked **Subskills** list, and verbatim
 copies of the source docs under `references/`. Rewrite single nodes with
 `--only <name> ...`. Saved answers are reused on later runs: `--redo` asks
@@ -221,7 +228,7 @@ so whoever runs it chooses, and knows, which agent writes the skill.
 ├── plan.json / plan.md           skill tree (+ mermaid)
 ├── prompts/ , answers/           judgment tasks and their answers (plan.json, <skill>/**.md)
 └── <api-name>/                   the skill to install
-    ├── SKILL.md                  core concepts + Subskills list
+    ├── SKILL.md                  core concepts + Coding Golden Rules + Subskills list
     ├── references/               verbatim source docs
     └── <task>/SKILL.md           subskill, same shape, nested
 ```

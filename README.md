@@ -54,12 +54,25 @@ graph TD
 
 ## How it works
 
-1. Install **iskillz** in your project, or globally.
-2. Ask your agent to create a new API skill for an API, and give it the API
-   docs' entry point, e.g. a GitHub URL.
-3. Your agent uses **iskillz** to fetch the docs and turn them into a new API
-   skill, tailored to that API, then installs it in your project (e.g.
-   `.claude/skills/acme-weather/`). It takes a few minutes.
+The skill tree is **not a mirror of the docs**, one skill per doc page.
+Your agent analyzes the docs' taxonomy and contents, then designs a new
+tree around how the API is used: the root skill holds the core concepts
+every task needs, each subskill covers one task (merging doc pages that
+belong together), reference pages get their own branch, and pages that
+don't help anyone use the API are left out.
+
+The flow **iskillz** imposes on your agent:
+
+```mermaid
+graph TD
+  docs["API docs<br/><i>website, git repo or local folder</i>"] --> fetch["fetch <i>(script)</i><br/>docs → markdown"]
+  fetch --> map["map <i>(script)</i><br/>crawl the docs → taxonomy"]
+  map --> plan["plan <i>(your agent)</i><br/>taxonomy → skill tree plan"]
+  plan --> generate["generate <i>(your agent)</i><br/>write one SKILL.md per node,<br/>from its source docs"]
+  generate --> check["check <i>(script)</i><br/>validate the skill tree"]
+  check --> install["install <i>(script)</i><br/>into your project's skills directory"]
+  install --> use["your agent reads the new API skill<br/>and carries on with your task"]
+```
 
 ## Where to use it
 

@@ -28,6 +28,31 @@ Your answer is **only** the markdown body:
   everything.
 - Do not repeat what the parent skills cover; refer to it in one line.
 
+**Mandatory in every root skill:** include the section below, verbatim, in
+the root skill's body, after the concepts and usage guidance, so agents
+using the generated API skill honour the same coding rules. Subskills
+inherit it from the root: do not repeat it there.
+
+```markdown
+## Coding Golden Rules (MANDATORY)
+
+Always honour these when writing code:
+
+- **KISS:** do **NOT** write **overcomplicated** code!
+- **Principle of Least Surprise:** do **NOT** surprise other code readers!
+- Make code **intuitive:**
+    - So **familiar** it's easy to **learn**.
+    - So **simple** it's easy to **understand**.
+    - So **idiomatic** it's easy to **read and write**.
+    - So **self-explanatory** that **code documentation** is mostly **code itself**.
+    - So **lean** there is **just what's needed**, no more no less.
+- **Add code comments** for other agents to follow:
+    - **ONLY** when strictly required, i.e. when code itself would't be enough.
+    - **Helpful** for **understanding the codebase.**
+    - **Useful** to resume work by other agents.
+    - **Same intuitiveness principles** as for code.
+```
+
 ## Accuracy
 
 - Use **only** facts from the source docs. Never invent class, function,
