@@ -225,4 +225,6 @@ __marimo__/
 # Other
 prompts-local/
 .DS_Store
+.obsidian/
+.qwen/
 
